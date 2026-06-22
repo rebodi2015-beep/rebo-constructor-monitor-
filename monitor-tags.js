@@ -209,8 +209,24 @@ async function dismissModals(page) {
 }
 
 // ─────────────────────────────────────────
-// CHEQUEO POR SITIO
+// POLLING — reintenta antes de marcar MISSING
+// Descarta que sea timing (valor seteado async) vs gap real
 // ─────────────────────────────────────────
+async function pollCheck(page, tag, attempts = 6, delayMs = 1000) {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      let found = false;
+      if (tag.type === 'window') {
+        found = await page.evaluate(`(() => { try { return !!(${tag.expr}); } catch(e) { return false; } })()`);
+      } else if (tag.type === 'selector') {
+        found = (await page.$(tag.selector)) !== null;
+      }
+      if (found) return true;
+    } catch {}
+    await page.waitForTimeout(delayMs);
+  }
+  return false;
+}
 async function checkSite(browser, site) {
   console.log(`\n🔍 Chequeando ${site.name}...`);
   const context = await browser.newContext({
@@ -263,12 +279,7 @@ async function checkSite(browser, site) {
     }
 
     try {
-      let found = false;
-      if (tag.type === 'window') {
-        found = await page.evaluate(`(() => { try { return !!(${tag.expr}); } catch(e) { return false; } })()`);
-      } else if (tag.type === 'selector') {
-        found = (await page.$(tag.selector)) !== null;
-      }
+      const found = await pollCheck(page, tag);
       if (!found && tag.notApplicable) {
         results[tag.label] = 'N/A';
       } else if (!found && tag.notVerifiable) {
@@ -322,6 +333,35 @@ function scoreOf(tagResults) {
 }
 
 // ─────────────────────────────────────────
+// GRÁFICO DE BARRAS — % de cobertura por fecha
+// ─────────────────────────────────────────
+function generateChart(siteHistory) {
+  if (siteHistory.length === 0) return '';
+  const W = 700, H = 140, padBottom = 28, padTop = 10, barGap = 8;
+  const barW = Math.min(48, (W - barGap * (siteHistory.length + 1)) / siteHistory.length);
+  const usableH = H - padBottom - padTop;
+
+  const bars = siteHistory.map((h, i) => {
+    const sc = scoreOf(h.tags);
+    const x = barGap + i * (barW + barGap);
+    const barH = (sc.pct / 100) * usableH;
+    const y = padTop + (usableH - barH);
+    const color = sc.pct >= 80 ? '#28a745' : sc.pct >= 50 ? '#fd7e14' : '#dc3545';
+    const legacyMark = h.source === 'manual_legacy' ? `<text x="${x + barW / 2}" y="${y - 14}" font-size="8" fill="#aeaeb2" text-anchor="middle">hist.</text>` : '';
+    return `
+      <rect x="${x}" y="${y}" width="${barW}" height="${Math.max(barH, 2)}" rx="4" fill="${color}" />
+      <text x="${x + barW / 2}" y="${y - 4}" font-size="11" font-weight="600" fill="#1d1d1f" text-anchor="middle">${sc.pct}%</text>
+      ${legacyMark}
+      <text x="${x + barW / 2}" y="${H - 8}" font-size="9" fill="#6e6e73" text-anchor="middle">${h.date.slice(5)}</text>`;
+  }).join('');
+
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" xmlns="http://www.w3.org/2000/svg" style="max-width:${W}px">
+    <line x1="0" y1="${padTop + usableH}" x2="${W}" y2="${padTop + usableH}" stroke="#e5e5ea" stroke-width="1" />
+    ${bars}
+  </svg>`;
+}
+
+// ─────────────────────────────────────────
 // HTML — diseño claro, estilo original
 // ─────────────────────────────────────────
 function generateHtml(history) {
@@ -360,6 +400,7 @@ function generateHtml(history) {
         </div>
         <div class="site-score ${lastScore.pct >= 80 ? 'ok' : lastScore.pct >= 50 ? 'warn' : 'err'}">${lastScore.pct}%</div>
       </div>
+      <div class="chart-wrap">${generateChart(siteHistory)}</div>
       <table class="event-table">
         <thead><tr><th>Tag</th>${dateHeaders}</tr></thead>
         <tbody>${sectionRows}</tbody>
@@ -393,6 +434,7 @@ function generateHtml(history) {
   .site-score.ok{background:#d4edda;color:#155724}
   .site-score.warn{background:#fff3cd;color:#856404}
   .site-score.err{background:#f8d7da;color:#721c24}
+  .chart-wrap{margin-bottom:1.25rem}
   .event-table{width:100%;border-collapse:collapse;font-size:12px}
   .event-table th{text-align:left;padding:6px 10px;border-bottom:1px solid #e5e5ea;vertical-align:bottom}
   .event-table td{padding:7px 10px;border-bottom:1px solid #f5f5f7;vertical-align:middle;white-space:nowrap}
