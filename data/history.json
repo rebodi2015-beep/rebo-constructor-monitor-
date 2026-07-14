@@ -982,40 +982,42 @@
       "source": "automated",
       "tags": {
         "window.cnstrc.userId": "MISSING",
-        "window.cnstrc.testCell": "MISSING",
-        "window.cnstrc.userSegments": "MISSING",
-        "serviceURL": "MISSING",
-        "window.cnstrc.purchaseData": "N/V",
-        "window.cnstrc.purchaseData.revenue": "N/V",
-        "window.cnstrc.purchaseData.orderId": "N/V",
-        "window.cnstrc.purchaseData.items": "N/V",
+        "purchaseData (estructura completa)": "N/V",
         "data-cnstrc-search-form": "OK",
         "data-cnstrc-search-input": "OK",
         "data-cnstrc-search-submit-btn": "OK",
-        "data-cnstrc-autosuggest": "MISSING",
-        "data-cnstrc-item-section (srch)": "MISSING",
-        "data-cnstrc-item-name (suggest)": "OK",
-        "data-cnstrc-item-id (suggest)": "OK",
-        "data-cnstrc-item-group": "MISSING",
-        "script#cnstrc-data": "MISSING",
+        "data-cnstrc-autosuggest": "N/V",
+        "data-cnstrc-item-section": "N/V",
+        "data-cnstrc-item-id (autocomplete)": "OK",
         "data-cnstrc-search": "MISSING",
-        "data-cnstrc-result-id": "OK",
         "data-cnstrc-num-results": "OK",
         "data-cnstrc-item-id (PLP)": "OK",
-        "data-cnstrc-item-name (PLP)": "OK",
         "data-cnstrc-item-variation-id (PLP)": "OK",
         "data-cnstrc-item-price (PLP)": "OK",
         "data-cnstrc-btn (PLP)": "OK",
-        "data-cnstrc-sl-campaign-id": "N/A",
+        "data-cnstrc-browse": "OK",
+        "data-cnstrc-filter-name": "OK",
+        "data-cnstrc-filter-value": "OK",
         "data-cnstrc-product-detail": "OK",
         "data-cnstrc-item-id (PDP)": "OK",
-        "data-cnstrc-item-name (PDP)": "OK",
         "data-cnstrc-item-variation-id (PDP)": "OK",
         "data-cnstrc-item-price (PDP)": "OK",
-        "data-cnstrc-btn (PDP)": "OK",
+        "data-cnstrc-btn=\"add_to_cart\" (PDP)": "OK",
+        "data-cnstrc-item-id (carrusel)": "N/A",
+        "data-cnstrc-item-variation-id (carrusel)": "N/A",
+        "data-cnstrc-item-price (carrusel)": "N/A",
+        "data-cnstrc-btn (carrusel)": "N/A",
         "data-cnstrc-recommendations": "OK",
         "data-cnstrc-recommendations-pod-id": "OK",
-        "data-cnstrc-strategy-id": "OK"
+        "data-cnstrc-result-id": "OK",
+        "data-cnstrc-num-results (recs)": "OK",
+        "data-cnstrc-item-id (recs)": "OK",
+        "data-cnstrc-item-variation-id (recs)": "OK"
+      },
+      "collections": {
+        "measured": [],
+        "summaryPct": null,
+        "discovered": 0
       }
     }
   ],
@@ -2002,40 +2004,42 @@
       "source": "automated",
       "tags": {
         "window.cnstrc.userId": "MISSING",
-        "window.cnstrc.testCell": "MISSING",
-        "window.cnstrc.userSegments": "MISSING",
-        "serviceURL": "MISSING",
-        "window.cnstrc.purchaseData": "N/V",
-        "window.cnstrc.purchaseData.revenue": "N/V",
-        "window.cnstrc.purchaseData.orderId": "N/V",
-        "window.cnstrc.purchaseData.items": "N/V",
+        "purchaseData (estructura completa)": "N/V",
         "data-cnstrc-search-form": "OK",
         "data-cnstrc-search-input": "OK",
         "data-cnstrc-search-submit-btn": "OK",
-        "data-cnstrc-autosuggest": "MISSING",
-        "data-cnstrc-item-section (srch)": "MISSING",
-        "data-cnstrc-item-name (suggest)": "N/V",
-        "data-cnstrc-item-id (suggest)": "N/V",
-        "data-cnstrc-item-group": "MISSING",
-        "script#cnstrc-data": "OK",
+        "data-cnstrc-autosuggest": "N/V",
+        "data-cnstrc-item-section": "N/V",
+        "data-cnstrc-item-id (autocomplete)": "N/V",
         "data-cnstrc-search": "MISSING",
-        "data-cnstrc-result-id": "OK",
         "data-cnstrc-num-results": "OK",
         "data-cnstrc-item-id (PLP)": "OK",
-        "data-cnstrc-item-name (PLP)": "OK",
-        "data-cnstrc-item-variation-id (PLP)": "MISSING",
+        "data-cnstrc-item-variation-id (PLP)": "N/A",
         "data-cnstrc-item-price (PLP)": "OK",
         "data-cnstrc-btn (PLP)": "OK",
-        "data-cnstrc-sl-campaign-id": "N/A",
+        "data-cnstrc-browse": "OK",
+        "data-cnstrc-filter-name": "OK",
+        "data-cnstrc-filter-value": "OK",
         "data-cnstrc-product-detail": "OK",
         "data-cnstrc-item-id (PDP)": "OK",
-        "data-cnstrc-item-name (PDP)": "OK",
-        "data-cnstrc-item-variation-id (PDP)": "MISSING",
+        "data-cnstrc-item-variation-id (PDP)": "N/A",
         "data-cnstrc-item-price (PDP)": "OK",
-        "data-cnstrc-btn (PDP)": "OK",
-        "data-cnstrc-recommendations": "MISSING",
-        "data-cnstrc-recommendations-pod-id": "MISSING",
-        "data-cnstrc-strategy-id": "MISSING"
+        "data-cnstrc-btn=\"add_to_cart\" (PDP)": "OK",
+        "data-cnstrc-item-id (carrusel)": "OK",
+        "data-cnstrc-item-variation-id (carrusel)": "N/A",
+        "data-cnstrc-item-price (carrusel)": "OK",
+        "data-cnstrc-btn (carrusel)": "OK",
+        "data-cnstrc-recommendations": "N/A",
+        "data-cnstrc-recommendations-pod-id": "N/A",
+        "data-cnstrc-result-id": "N/A",
+        "data-cnstrc-num-results (recs)": "N/A",
+        "data-cnstrc-item-id (recs)": "N/A",
+        "data-cnstrc-item-variation-id (recs)": "N/A"
+      },
+      "collections": {
+        "measured": [],
+        "summaryPct": null,
+        "discovered": 0
       }
     }
   ],
@@ -3012,40 +3016,109 @@
       "source": "automated",
       "tags": {
         "window.cnstrc.userId": "MISSING",
-        "window.cnstrc.testCell": "MISSING",
-        "window.cnstrc.userSegments": "MISSING",
-        "serviceURL": "MISSING",
-        "window.cnstrc.purchaseData": "N/V",
-        "window.cnstrc.purchaseData.revenue": "N/V",
-        "window.cnstrc.purchaseData.orderId": "N/V",
-        "window.cnstrc.purchaseData.items": "N/V",
+        "purchaseData (estructura completa)": "N/V",
         "data-cnstrc-search-form": "OK",
         "data-cnstrc-search-input": "OK",
         "data-cnstrc-search-submit-btn": "OK",
         "data-cnstrc-autosuggest": "OK",
-        "data-cnstrc-item-section (srch)": "MISSING",
-        "data-cnstrc-item-name (suggest)": "OK",
-        "data-cnstrc-item-id (suggest)": "OK",
-        "data-cnstrc-item-group": "MISSING",
-        "script#cnstrc-data": "MISSING",
+        "data-cnstrc-item-section": "N/V",
+        "data-cnstrc-item-id (autocomplete)": "OK",
         "data-cnstrc-search": "MISSING",
-        "data-cnstrc-result-id": "MISSING",
         "data-cnstrc-num-results": "OK",
         "data-cnstrc-item-id (PLP)": "OK",
-        "data-cnstrc-item-name (PLP)": "OK",
-        "data-cnstrc-item-variation-id (PLP)": "MISSING",
+        "data-cnstrc-item-variation-id (PLP)": "N/A",
         "data-cnstrc-item-price (PLP)": "OK",
         "data-cnstrc-btn (PLP)": "OK",
-        "data-cnstrc-sl-campaign-id": "N/A",
+        "data-cnstrc-browse": "OK",
+        "data-cnstrc-filter-name": "OK",
+        "data-cnstrc-filter-value": "OK",
         "data-cnstrc-product-detail": "OK",
         "data-cnstrc-item-id (PDP)": "OK",
-        "data-cnstrc-item-name (PDP)": "OK",
-        "data-cnstrc-item-variation-id (PDP)": "MISSING",
+        "data-cnstrc-item-variation-id (PDP)": "N/A",
         "data-cnstrc-item-price (PDP)": "OK",
-        "data-cnstrc-btn (PDP)": "OK",
-        "data-cnstrc-recommendations": "OK",
-        "data-cnstrc-recommendations-pod-id": "MISSING",
-        "data-cnstrc-strategy-id": "MISSING"
+        "data-cnstrc-btn=\"add_to_cart\" (PDP)": "OK",
+        "data-cnstrc-item-id (carrusel)": "OK",
+        "data-cnstrc-item-variation-id (carrusel)": "N/A",
+        "data-cnstrc-item-price (carrusel)": "OK",
+        "data-cnstrc-btn (carrusel)": "OK",
+        "data-cnstrc-recommendations": "N/A",
+        "data-cnstrc-recommendations-pod-id": "N/A",
+        "data-cnstrc-result-id": "N/A",
+        "data-cnstrc-num-results (recs)": "N/A",
+        "data-cnstrc-item-id (recs)": "N/A",
+        "data-cnstrc-item-variation-id (recs)": "N/A"
+      },
+      "collections": {
+        "measured": [
+          {
+            "url": "https://www.jumbo.cl/busca?fq=H%3A30427&nombre_promo=home-banner-bombazo-excl-pechuga-deshuesada-o-filetillo-pollo-s29-14072026",
+            "tags": {
+              "data-cnstrc-browse": "OK",
+              "data-cnstrc-filter-name": "OK",
+              "data-cnstrc-filter-value": "OK",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 100
+          },
+          {
+            "url": "https://www.jumbo.cl/busca?fq=H%3A30510&nombre_promo=home-banner-despacho-gratis-dog-chow-cat-chow-13072026",
+            "tags": {
+              "data-cnstrc-browse": "OK",
+              "data-cnstrc-filter-name": "OK",
+              "data-cnstrc-filter-value": "OK",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 100
+          },
+          {
+            "url": "https://www.jumbo.cl/busca?fq=H%3A30373&nombre_promo=home-banner-proveedor-banner-ppal-proveedor-nestle-cereales-s29-14072026",
+            "tags": {
+              "data-cnstrc-browse": "MISSING",
+              "data-cnstrc-filter-name": "MISSING",
+              "data-cnstrc-filter-value": "MISSING",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 40
+          },
+          {
+            "url": "https://www.jumbo.cl/busca?fq=H%3A27941&nombre_promo=home-banner-bombazo-un-dia-ideal-para-preparar-sopaipillas-s25-16062026",
+            "tags": {
+              "data-cnstrc-browse": "OK",
+              "data-cnstrc-filter-name": "OK",
+              "data-cnstrc-filter-value": "OK",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 100
+          },
+          {
+            "url": "https://www.jumbo.cl/busca?fq=H%3A30447&nombre_promo=home-grilla-bombazo-excl-prepara-tu-almuerzo-rapido-hasta-s28-13072026",
+            "tags": {
+              "data-cnstrc-browse": "MISSING",
+              "data-cnstrc-filter-name": "MISSING",
+              "data-cnstrc-filter-value": "MISSING",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 40
+          },
+          {
+            "url": "https://www.jumbo.cl/busca?fq=H%3A30101&nombre_promo=home-grilla-bombazo-excl-nescafe-mixes-3x2-s28-13072026",
+            "tags": {
+              "data-cnstrc-browse": "OK",
+              "data-cnstrc-filter-name": "OK",
+              "data-cnstrc-filter-value": "OK",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 100
+          }
+        ],
+        "summaryPct": 67,
+        "discovered": 6
       }
     }
   ],
@@ -4022,40 +4095,109 @@
       "source": "automated",
       "tags": {
         "window.cnstrc.userId": "MISSING",
-        "window.cnstrc.testCell": "MISSING",
-        "window.cnstrc.userSegments": "MISSING",
-        "serviceURL": "MISSING",
-        "window.cnstrc.purchaseData": "N/V",
-        "window.cnstrc.purchaseData.revenue": "N/V",
-        "window.cnstrc.purchaseData.orderId": "N/V",
-        "window.cnstrc.purchaseData.items": "N/V",
+        "purchaseData (estructura completa)": "N/V",
         "data-cnstrc-search-form": "OK",
         "data-cnstrc-search-input": "OK",
         "data-cnstrc-search-submit-btn": "OK",
         "data-cnstrc-autosuggest": "OK",
-        "data-cnstrc-item-section (srch)": "MISSING",
-        "data-cnstrc-item-name (suggest)": "OK",
-        "data-cnstrc-item-id (suggest)": "OK",
-        "data-cnstrc-item-group": "MISSING",
-        "script#cnstrc-data": "MISSING",
+        "data-cnstrc-item-section": "N/V",
+        "data-cnstrc-item-id (autocomplete)": "OK",
         "data-cnstrc-search": "MISSING",
-        "data-cnstrc-result-id": "MISSING",
         "data-cnstrc-num-results": "OK",
         "data-cnstrc-item-id (PLP)": "OK",
-        "data-cnstrc-item-name (PLP)": "OK",
-        "data-cnstrc-item-variation-id (PLP)": "MISSING",
+        "data-cnstrc-item-variation-id (PLP)": "N/A",
         "data-cnstrc-item-price (PLP)": "OK",
         "data-cnstrc-btn (PLP)": "OK",
-        "data-cnstrc-sl-campaign-id": "N/A",
+        "data-cnstrc-browse": "OK",
+        "data-cnstrc-filter-name": "OK",
+        "data-cnstrc-filter-value": "OK",
         "data-cnstrc-product-detail": "OK",
         "data-cnstrc-item-id (PDP)": "OK",
-        "data-cnstrc-item-name (PDP)": "OK",
-        "data-cnstrc-item-variation-id (PDP)": "MISSING",
+        "data-cnstrc-item-variation-id (PDP)": "N/A",
         "data-cnstrc-item-price (PDP)": "OK",
-        "data-cnstrc-btn (PDP)": "OK",
-        "data-cnstrc-recommendations": "OK",
-        "data-cnstrc-recommendations-pod-id": "MISSING",
-        "data-cnstrc-strategy-id": "MISSING"
+        "data-cnstrc-btn=\"add_to_cart\" (PDP)": "OK",
+        "data-cnstrc-item-id (carrusel)": "OK",
+        "data-cnstrc-item-variation-id (carrusel)": "N/A",
+        "data-cnstrc-item-price (carrusel)": "OK",
+        "data-cnstrc-btn (carrusel)": "OK",
+        "data-cnstrc-recommendations": "N/A",
+        "data-cnstrc-recommendations-pod-id": "N/A",
+        "data-cnstrc-result-id": "N/A",
+        "data-cnstrc-num-results (recs)": "N/A",
+        "data-cnstrc-item-id (recs)": "N/A",
+        "data-cnstrc-item-variation-id (recs)": "N/A"
+      },
+      "collections": {
+        "measured": [
+          {
+            "url": "https://www.santaisabel.cl/busca?fq=H%3A11364&nombre_promo=home-banner-especial-santa-pasteleria-14072026",
+            "tags": {
+              "data-cnstrc-browse": "MISSING",
+              "data-cnstrc-filter-name": "MISSING",
+              "data-cnstrc-filter-value": "MISSING",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 40
+          },
+          {
+            "url": "https://www.santaisabel.cl/busca?fq=H%3A11066&nombre_promo=home-banner-especial-despensa-hasta-48-descto-s29-16072026",
+            "tags": {
+              "data-cnstrc-browse": "OK",
+              "data-cnstrc-filter-name": "OK",
+              "data-cnstrc-filter-value": "OK",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 100
+          },
+          {
+            "url": "https://www.santaisabel.cl/busca?fq=H%3A11065&nombre_promo=home-banner-especial-bebidas-aguas-jugos-hasta-44-descto-s29-16072026",
+            "tags": {
+              "data-cnstrc-browse": "OK",
+              "data-cnstrc-filter-name": "OK",
+              "data-cnstrc-filter-value": "OK",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 100
+          },
+          {
+            "url": "https://www.santaisabel.cl/busca?fq=H%3A10996&nombre_promo=home-banner-mmpp-todas-las-ofertas-2605202",
+            "tags": {
+              "data-cnstrc-browse": "OK",
+              "data-cnstrc-filter-name": "OK",
+              "data-cnstrc-filter-value": "OK",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 100
+          },
+          {
+            "url": "https://www.santaisabel.cl/busca?fq=H%3A11308&nombre_promo=home-banner-lpm-ofertas-carro-imbatible-ofertas-desde-vigencia-s26-26062026",
+            "tags": {
+              "data-cnstrc-browse": "OK",
+              "data-cnstrc-filter-name": "OK",
+              "data-cnstrc-filter-value": "OK",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 100
+          },
+          {
+            "url": "https://www.santaisabel.cl/busca?fq=H%3A10399&nombre_promo=categoria-huincha-especial-sopaipillas-s24-09062026",
+            "tags": {
+              "data-cnstrc-browse": "OK",
+              "data-cnstrc-filter-name": "OK",
+              "data-cnstrc-filter-value": "OK",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 100
+          }
+        ],
+        "summaryPct": 83,
+        "discovered": 6
       }
     }
   ]
