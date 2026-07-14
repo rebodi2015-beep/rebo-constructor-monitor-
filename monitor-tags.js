@@ -542,45 +542,86 @@ function generateHtml(history) {
   const sections = [...new Set(TAG_CHECKS.map(t => t.section))];
 
   const siteCards = SITES.map(site => {
-    const siteHistory = history[site.key] || [];
-    const last = siteHistory[siteHistory.length - 1];
+    const fullHistory = history[site.key] || [];
+    const last = fullHistory[fullHistory.length - 1];
     const lastScore = last ? scoreOf(site, last.tags) : { pct: 0 };
 
-    const dateHeaders = siteHistory.map(h => {
-      const sc = scoreOf(site, h.tags);
-      const legacyTag = h.source === 'manual_legacy' ? '<span class="legacy-tag" title="Carga manual histórica">hist.</span>' : '';
-      return `<th><div class="date-score ${sc.pct >= 80 ? 'ok' : sc.pct >= 50 ? 'warn' : 'err'}">${sc.pct}%</div><div class="date-label">${h.date}${legacyTag}</div></th>`;
-    }).join('');
+    // Ventana por defecto: últimos DEFAULT_WINDOW días. El toggle "ver todos" expande.
+    // Guardo el histórico completo en data-* para que el JS lo reconstruya sin recalcular.
+    const DEFAULT_WINDOW = 10;
+    const totalRuns = fullHistory.length;
 
-    const sectionRows = sections.map(section => {
-      const tagsInSection = TAG_CHECKS.filter(t => t.section === section);
-      const rows = tagsInSection.map(tag => {
-        // Si el atributo no aplica al banner, lo mostramos como N/A permanente (sin ruido)
-        const naForBanner = typeof tag.applies === 'function' && !tag.applies(site);
-        const cells = siteHistory.map(h => {
-          const v = naForBanner ? 'N/A' : (h.tags[tag.label] || '—');
-          const cls = v === 'OK' ? 'ok' : v === 'MISSING' ? 'err' : 'neutral';
-          return `<td class="${cls}">${v}</td>`;
-        }).join('');
-        return `<tr><td class="tag-label">${tag.label}</td>${cells}</tr>`;
+    // Helper: dado un subconjunto de historia, arma headers + filas.
+    // prevValueOf: para detectar transición → MISSING necesito el valor del día
+    // INMEDIATAMENTE anterior en el histórico COMPLETO (no en la ventana recortada),
+    // así el primer día visible también sabe si venía de OK.
+    function buildTable(windowHistory) {
+      const dateHeaders = windowHistory.map(h => {
+        const sc = scoreOf(site, h.tags);
+        const legacyTag = h.source === 'manual_legacy' ? '<span class="legacy-tag" title="Carga manual histórica">hist.</span>' : '';
+        return `<th><div class="date-score ${sc.pct >= 80 ? 'ok' : sc.pct >= 50 ? 'warn' : 'err'}">${sc.pct}%</div><div class="date-label">${h.date}${legacyTag}</div></th>`;
       }).join('');
-      return `<tr class="section-header"><td colspan="${1 + siteHistory.length}">${section}</td></tr>${rows}`;
-    }).join('');
+
+      const sectionRows = sections.map(section => {
+        const tagsInSection = TAG_CHECKS.filter(t => t.section === section);
+        const rows = tagsInSection.map(tag => {
+          const naForBanner = typeof tag.applies === 'function' && !tag.applies(site);
+          const cells = windowHistory.map(h => {
+            const v = naForBanner ? 'N/A' : (h.tags[tag.label] || '—');
+            let cls = v === 'OK' ? 'ok' : v === 'MISSING' ? 'err' : 'neutral';
+
+            // Resaltado SOLO en transición a MISSING: el valor del día anterior
+            // (en el histórico completo) era distinto de MISSING y hoy es MISSING.
+            if (!naForBanner && v === 'MISSING') {
+              const idxFull = fullHistory.indexOf(h);
+              const prev = idxFull > 0 ? fullHistory[idxFull - 1] : null;
+              const prevV = prev ? (prev.tags[tag.label] || '—') : '—';
+              if (prevV !== 'MISSING' && prevV !== '—') {
+                cls += ' just-broke';
+              }
+            }
+            return `<td class="${cls}">${v}</td>`;
+          }).join('');
+          return `<tr><td class="tag-label">${tag.label}</td>${cells}</tr>`;
+        }).join('');
+        return `<tr class="section-header"><td colspan="${1 + windowHistory.length}">${section}</td></tr>${rows}`;
+      }).join('');
+
+      return { dateHeaders, sectionRows };
+    }
+
+    const windowHistory = fullHistory.slice(-DEFAULT_WINDOW);
+    const fullTable = buildTable(fullHistory);
+    const windowTable = buildTable(windowHistory);
+    const hasMore = totalRuns > DEFAULT_WINDOW;
+
+    // Cuenta cuántas transiciones a MISSING hay en la ventana visible (para el badge)
+    const brokeCount = (windowTable.sectionRows.match(/just-broke/g) || []).length;
 
     return `
     <div class="site-card" id="site-${site.key}">
       <div class="site-header">
         <div>
           <div class="site-name">${site.name}${site.sisa ? ' <span class="sisa-tag" title="Verificar que corresponde a SisaCL en logs de Constructor">SISA?</span>' : ''}</div>
-          <div class="site-meta">${siteHistory.length} ejecuciones · Recs: ${site.hasRecommendations ? 'sí' : 'N/A'} · variation-id: ${site.usesVariationDedup ? 'N/A (dedup)' : 'esencial'}</div>
+          <div class="site-meta">${totalRuns} ejecuciones · Recs: ${site.hasRecommendations ? 'sí' : 'N/A'} · variation-id: ${site.usesVariationDedup ? 'N/A (dedup)' : 'esencial'}</div>
         </div>
         <div class="site-score ${lastScore.pct >= 80 ? 'ok' : lastScore.pct >= 50 ? 'warn' : 'err'}">${lastScore.pct}%</div>
       </div>
-      <div class="chart-wrap">${generateChart(site, siteHistory)}</div>
-      <table class="event-table">
-        <thead><tr><th>Tag</th>${dateHeaders}</tr></thead>
-        <tbody>${sectionRows}</tbody>
-      </table>
+      <div class="chart-wrap">${generateChart(site, fullHistory)}</div>
+      <div class="table-controls">
+        <span class="window-info">Mostrando ${hasMore ? `últimos ${DEFAULT_WINDOW}` : `${totalRuns}`} de ${totalRuns} días${brokeCount > 0 ? ` · <span class="broke-badge">${brokeCount} nuevo${brokeCount > 1 ? 's' : ''} MISSING</span>` : ''}</span>
+        ${hasMore ? `<button class="toggle-window" data-site="${site.key}" data-expanded="false">Ver todos (${totalRuns})</button>` : ''}
+      </div>
+      <div class="table-scroll">
+        <table class="event-table" data-view="window">
+          <thead><tr><th class="sticky-col">Tag</th>${windowTable.dateHeaders}</tr></thead>
+          <tbody>${windowTable.sectionRows}</tbody>
+        </table>
+        <table class="event-table" data-view="full" style="display:none">
+          <thead><tr><th class="sticky-col">Tag</th>${fullTable.dateHeaders}</tr></thead>
+          <tbody>${fullTable.sectionRows}</tbody>
+        </table>
+      </div>
       ${renderCollections(last)}
     </div>`;
   }).join('');
@@ -614,14 +655,25 @@ function generateHtml(history) {
   .site-score.warn{background:#fff3cd;color:#856404}
   .site-score.err{background:#f8d7da;color:#721c24}
   .chart-wrap{margin-bottom:1.25rem}
-  .event-table{width:100%;border-collapse:collapse;font-size:12px}
-  .event-table th{text-align:left;padding:6px 10px;border-bottom:1px solid #e5e5ea;vertical-align:bottom}
+  .table-controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:12px;flex-wrap:wrap}
+  .window-info{font-size:12px;color:#6e6e73}
+  .broke-badge{background:#f8d7da;color:#721c24;font-weight:600;padding:2px 8px;border-radius:99px;font-size:11px}
+  .toggle-window{background:#fff;border:1px solid #d2d2d7;color:#1d1d1f;padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:500}
+  .toggle-window:hover{background:#f5f5f7}
+  .table-scroll{overflow-x:auto;border:1px solid #e5e5ea;border-radius:8px;-webkit-overflow-scrolling:touch}
+  .table-scroll::-webkit-scrollbar{height:10px}
+  .table-scroll::-webkit-scrollbar-thumb{background:#c7c7cc;border-radius:5px}
+  .table-scroll::-webkit-scrollbar-track{background:#f5f5f7}
+  .event-table{width:auto;min-width:100%;border-collapse:separate;border-spacing:0;font-size:12px}
+  .event-table th{text-align:left;padding:6px 10px;border-bottom:1px solid #e5e5ea;vertical-align:bottom;background:#fff;white-space:nowrap}
   .event-table td{padding:7px 10px;border-bottom:1px solid #f5f5f7;vertical-align:middle;white-space:nowrap}
-  .section-header td{font-size:11px;font-weight:600;color:#6e6e73;text-transform:uppercase;letter-spacing:.05em;background:#f5f5f7;padding:6px 10px}
-  .tag-label{font-family:monospace;font-size:11px;color:#1d1d1f}
+  .sticky-col{position:sticky;left:0;z-index:2;background:#fff;box-shadow:1px 0 0 #e5e5ea}
+  .tag-label{position:sticky;left:0;z-index:1;background:#fff;box-shadow:1px 0 0 #f0f0f0;font-family:monospace;font-size:11px;color:#1d1d1f}
+  .section-header td{position:sticky;left:0;font-size:11px;font-weight:600;color:#6e6e73;text-transform:uppercase;letter-spacing:.05em;background:#f5f5f7;padding:6px 10px}
   td.ok{color:#155724;font-weight:500}
   td.err{color:#721c24;font-weight:500}
   td.neutral{color:#aeaeb2}
+  td.just-broke{background:#f8d7da;box-shadow:inset 0 0 0 2px #dc3545;font-weight:700;border-radius:3px}
   .date-score{font-size:13px;font-weight:700;border-radius:6px;padding:2px 8px;display:inline-block}
   .date-score.ok{background:#d4edda;color:#155724}
   .date-score.warn{background:#fff3cd;color:#856404}
@@ -663,6 +715,27 @@ ${siteCards}
     });
   });
   document.querySelector('.site-card').classList.add('active');
+
+  // Toggle ventana de días: alterna entre tabla recortada (últimos N) y completa
+  document.querySelectorAll('.toggle-window').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const card = btn.closest('.site-card');
+      const windowT = card.querySelector('table[data-view="window"]');
+      const fullT = card.querySelector('table[data-view="full"]');
+      const expanded = btn.dataset.expanded === 'true';
+      if (expanded) {
+        windowT.style.display = '';
+        fullT.style.display = 'none';
+        btn.dataset.expanded = 'false';
+        btn.textContent = btn.textContent.replace('Ver menos', 'Ver todos');
+      } else {
+        windowT.style.display = 'none';
+        fullT.style.display = '';
+        btn.dataset.expanded = 'true';
+        btn.textContent = 'Ver menos (últimos 10)';
+      }
+    });
+  });
 </script>
 </body>
 </html>`;
