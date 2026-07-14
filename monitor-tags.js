@@ -1,13 +1,20 @@
 /**
  * Constructor.io — Monitor de Marcajes DOM
- * Banderas: Paris, Easy, Jumbo, Santaisabel
+ * Banderas: Paris, Easy, Jumbo, Santaisabel (SISA CL)
  *
- * v2 — fixes aplicados:
- *  - Cierre automático de modales (cookies / selección de comuna) antes de chequear
- *  - Espera por networkidle en vez de timeout fijo corto (Paris/Easy no cargaban)
- *  - PDP de Santaisabel reemplazado (el anterior estaba sin stock)
- *  - Historial 06-15/06-17/06-18 reconstruido como "histórico manual" (no automatizado)
- *  - Diseño claro, estilo original (antes quedó en tema oscuro por error)
+ * v3 — reescritura según lista de atributos esenciales de Constructor (Luis Nunez, jul/2026):
+ *  - Matriz condicional banner × página × atributo (fin de falsos positivos)
+ *  - item-variation-id: esencial SOLO en Paris (resto usa Deduplicador de Variaciones → N/A)
+ *  - Recomendaciones: SOLO Paris (Easy/Jumbo/SISA no tienen Constructor Recommendations → N/A)
+ *  - price/btn en PLP: condicionados a que exista add_to_cart en esa PLP (auto-detección)
+ *  - result-id: movido a Recomendaciones (no es de Search PLP)
+ *  - Nuevas superficies: Browse (categoría + colección), carruseles home con ATC, autocomplete item-section
+ *  - Browse-colección: URL en placeholder por banner hasta que Constructor pase el ejemplo (marca N/V)
+ *  - Disclaimer visible: valida PRESENCIA, no exactitud del dato (feedback Constructor)
+ *
+ * PENDIENTE DE VERIFICACIÓN (no confirmado por Diego al momento de esta versión):
+ *  - Que Santaisabel.cl == SISA CL en los logs de Constructor (Luis valida "SisaCL")
+ *  - URLs de Browse-colección Constructor por banner
  */
 
 const { chromium } = require('playwright');
@@ -21,174 +28,186 @@ const MAX_HISTORY_PER_SITE = 30;
 
 // ─────────────────────────────────────────
 // SITIOS
+// browseCollectionUrl: PLACEHOLDER hasta que Constructor pase ejemplo de Colección.
 // ─────────────────────────────────────────
 const SITES = [
   {
     key: 'paris',
     name: 'Paris.cl',
+    sisa: false,
+    hasRecommendations: true,   // único banner con Constructor Recommendations
+    usesVariationDedup: false,  // Paris NO usa Deduplicador → variation-id es esencial
     homeUrl: 'https://www.paris.cl',
     searchUrl: 'https://www.paris.cl/search?q=televisor',
     plpUrl: 'https://www.paris.cl/electro/television/televisores-led/',
+    // Patrón de link de colecciones en home. AJUSTAR: confirmar patrón real de Paris.
+    collectionLinkPatterns: ['/search?', '/collection'],
     pdpUrl: 'https://www.paris.cl/qled-smart-tv-55-4k-vision-ai-q7fa-2025-128009999.html',
   },
   {
     key: 'easy',
     name: 'Easy.cl',
+    sisa: false,
+    hasRecommendations: false,
+    usesVariationDedup: true,   // usa Deduplicador → variation-id N/A
     homeUrl: 'https://www.easy.cl',
     searchUrl: 'https://www.easy.cl/busqueda?ft=silla',
     plpUrl: 'https://www.easy.cl/muebles/muebles-de-oficina/sillas-de-escritorio',
+    // AJUSTAR: confirmar patrón real de Easy.
+    collectionLinkPatterns: ['/busca?', '/busqueda?'],
     pdpUrl: 'https://www.easy.cl/silla-de-escritorio-rio-negro-contatto-1322002/p',
   },
   {
     key: 'jumbo',
     name: 'Jumbo.cl',
+    sisa: false,
+    hasRecommendations: false,
+    usesVariationDedup: true,
     homeUrl: 'https://www.jumbo.cl',
     searchUrl: 'https://www.jumbo.cl/busqueda?ft=leche',
     plpUrl: 'https://www.jumbo.cl/lacteos-y-quesos/leches/leche-liquida',
+    // Confirmado por Diego: colecciones de home apuntan a /busca?fq=...
+    collectionLinkPatterns: ['/busca?fq=', '/busca?'],
     pdpUrl: 'https://www.jumbo.cl/leche-soprole-natural-1-litro/p',
   },
   {
     key: 'santaisabel',
     name: 'Santaisabel.cl',
+    sisa: true,                 // ⚠️ verificar que == SisaCL en logs de Constructor
+    hasRecommendations: false,
+    usesVariationDedup: true,
     homeUrl: 'https://www.santaisabel.cl',
     searchUrl: 'https://www.santaisabel.cl/busqueda?ft=pan',
     plpUrl: 'https://www.santaisabel.cl/panaderia-y-pasteleria/panaderia-envasada/pan-de-molde',
-    pdpUrl: 'https://www.santaisabel.cl/pan-de-molde-blanco-ideal-bolsa-700-g-tipo-sa/p', // reemplazado: el anterior no tenía stock
+    // AJUSTAR: mismo patrón que Jumbo probablemente (stack VTEX Cencosud), confirmar.
+    collectionLinkPatterns: ['/busca?fq=', '/busca?'],
+    pdpUrl: 'https://www.santaisabel.cl/pan-de-molde-blanco-ideal-bolsa-700-g-tipo-sa/p',
   },
 ];
 
 // ─────────────────────────────────────────
-// TAGS A CHEQUEAR (sin cambios respecto a v1)
+// PÁGINAS
+// Cada página declara su URL y si debe auto-detectar add_to_cart
+// (para condicionar price/btn en PLP y carruseles).
 // ─────────────────────────────────────────
-const TAG_CHECKS = [
-  { section: '1 — Window Variables (Global)', label: 'window.cnstrc.userId', page: 'home', type: 'window', expr: 'window.cnstrc && !!window.cnstrc.userId' },
-  { section: '1 — Window Variables (Global)', label: 'window.cnstrc.testCell', page: 'home', type: 'window', expr: 'window.cnstrc && !!window.cnstrc.testCell' },
-  { section: '1 — Window Variables (Global)', label: 'window.cnstrc.userSegments', page: 'home', type: 'window', expr: 'window.cnstrc && !!window.cnstrc.userSegments' },
-  { section: '1 — Window Variables (Global)', label: 'serviceURL', page: 'home', type: 'window', expr: '!!window.serviceURL' },
-  { section: '1 — Window Variables (Global)', label: 'window.cnstrc.purchaseData', page: 'pdp', type: 'window', expr: 'window.cnstrc && !!window.cnstrc.purchaseData', requiresCheckout: true },
-  { section: '1 — Window Variables (Global)', label: 'window.cnstrc.purchaseData.revenue', page: 'pdp', type: 'window', expr: 'window.cnstrc && window.cnstrc.purchaseData && !!window.cnstrc.purchaseData.revenue', requiresCheckout: true },
-  { section: '1 — Window Variables (Global)', label: 'window.cnstrc.purchaseData.orderId', page: 'pdp', type: 'window', expr: 'window.cnstrc && window.cnstrc.purchaseData && !!window.cnstrc.purchaseData.orderId', requiresCheckout: true },
-  { section: '1 — Window Variables (Global)', label: 'window.cnstrc.purchaseData.items', page: 'pdp', type: 'window', expr: 'window.cnstrc && window.cnstrc.purchaseData && !!window.cnstrc.purchaseData.items', requiresCheckout: true },
+const PAGES = {
+  home:   { urlKey: 'homeUrl' },
+  search: { urlKey: 'searchUrl' },
+  plp:    { urlKey: 'plpUrl' },            // Browse categoría (URL fija estable)
+  pdp:    { urlKey: 'pdpUrl' },
+};
 
-  { section: '2 — Buscador & Autocomplete', label: 'data-cnstrc-search-form', page: 'home', type: 'selector', selector: '[data-cnstrc-search-form]' },
-  { section: '2 — Buscador & Autocomplete', label: 'data-cnstrc-search-input', page: 'home', type: 'selector', selector: '[data-cnstrc-search-input]' },
-  { section: '2 — Buscador & Autocomplete', label: 'data-cnstrc-search-submit-btn', page: 'home', type: 'selector', selector: '[data-cnstrc-search-submit-btn]' },
-  { section: '2 — Buscador & Autocomplete', label: 'data-cnstrc-autosuggest', page: 'search', type: 'selector', selector: '[data-cnstrc-autosuggest]' },
-  { section: '2 — Buscador & Autocomplete', label: 'data-cnstrc-item-section (srch)', page: 'search', type: 'selector', selector: '[data-cnstrc-item-section]' },
-  { section: '2 — Buscador & Autocomplete', label: 'data-cnstrc-item-name (suggest)', page: 'search', type: 'selector', selector: '[data-cnstrc-item-name]', notVerifiable: true },
-  { section: '2 — Buscador & Autocomplete', label: 'data-cnstrc-item-id (suggest)', page: 'search', type: 'selector', selector: '[data-cnstrc-item-id]', notVerifiable: true },
-  { section: '2 — Buscador & Autocomplete', label: 'data-cnstrc-item-group', page: 'search', type: 'selector', selector: '[data-cnstrc-item-group]' },
+// Cuántas colecciones de home seguir por banner (descubrimiento dinámico)
+const MAX_COLLECTIONS_PER_SITE = 6;
 
-  { section: '3 — Páginas de Listados (PLP — Search & Browse)', label: 'script#cnstrc-data', page: 'plp', type: 'selector', selector: 'script#cnstrc-data' },
-  { section: '3 — Páginas de Listados (PLP — Search & Browse)', label: 'data-cnstrc-search', page: 'plp', type: 'selector', selector: '[data-cnstrc-search]' },
-  { section: '3 — Páginas de Listados (PLP — Search & Browse)', label: 'data-cnstrc-result-id', page: 'plp', type: 'selector', selector: '[data-cnstrc-result-id]' },
-  { section: '3 — Páginas de Listados (PLP — Search & Browse)', label: 'data-cnstrc-num-results', page: 'plp', type: 'selector', selector: '[data-cnstrc-num-results]' },
-  { section: '3 — Páginas de Listados (PLP — Search & Browse)', label: 'data-cnstrc-item-id (PLP)', page: 'plp', type: 'selector', selector: '[data-cnstrc-item-id]' },
-  { section: '3 — Páginas de Listados (PLP — Search & Browse)', label: 'data-cnstrc-item-name (PLP)', page: 'plp', type: 'selector', selector: '[data-cnstrc-item-name]' },
-  { section: '3 — Páginas de Listados (PLP — Search & Browse)', label: 'data-cnstrc-item-variation-id (PLP)', page: 'plp', type: 'selector', selector: '[data-cnstrc-item-variation-id]' },
-  { section: '3 — Páginas de Listados (PLP — Search & Browse)', label: 'data-cnstrc-item-price (PLP)', page: 'plp', type: 'selector', selector: '[data-cnstrc-item-price]' },
-  { section: '3 — Páginas de Listados (PLP — Search & Browse)', label: 'data-cnstrc-btn (PLP)', page: 'plp', type: 'selector', selector: '[data-cnstrc-btn]' },
-  { section: '3 — Páginas de Listados (PLP — Search & Browse)', label: 'data-cnstrc-sl-campaign-id', page: 'plp', type: 'selector', selector: '[data-cnstrc-sl-campaign-id]', notApplicable: true },
-
-  { section: '4 — Ficha de Producto (PDP)', label: 'data-cnstrc-product-detail', page: 'pdp', type: 'selector', selector: '[data-cnstrc-product-detail]' },
-  { section: '4 — Ficha de Producto (PDP)', label: 'data-cnstrc-item-id (PDP)', page: 'pdp', type: 'selector', selector: '[data-cnstrc-item-id]' },
-  { section: '4 — Ficha de Producto (PDP)', label: 'data-cnstrc-item-name (PDP)', page: 'pdp', type: 'selector', selector: '[data-cnstrc-item-name]' },
-  { section: '4 — Ficha de Producto (PDP)', label: 'data-cnstrc-item-variation-id (PDP)', page: 'pdp', type: 'selector', selector: '[data-cnstrc-item-variation-id]' },
-  { section: '4 — Ficha de Producto (PDP)', label: 'data-cnstrc-item-price (PDP)', page: 'pdp', type: 'selector', selector: '[data-cnstrc-item-price]' },
-  { section: '4 — Ficha de Producto (PDP)', label: 'data-cnstrc-btn (PDP)', page: 'pdp', type: 'selector', selector: '[data-cnstrc-btn]' },
-
-  { section: '5 — Recomendaciones (Recommendations Widget)', label: 'data-cnstrc-recommendations', page: 'pdp', type: 'selector', selector: '[data-cnstrc-recommendations]' },
-  { section: '5 — Recomendaciones (Recommendations Widget)', label: 'data-cnstrc-recommendations-pod-id', page: 'pdp', type: 'selector', selector: '[data-cnstrc-recommendations-pod-id]' },
-  { section: '5 — Recomendaciones (Recommendations Widget)', label: 'data-cnstrc-strategy-id', page: 'pdp', type: 'selector', selector: '[data-cnstrc-strategy-id]' },
+// Tags de Browse que se chequean en cada colección descubierta.
+// (variation-id se agrega solo para Paris en runtime)
+const COLLECTION_TAG_CHECKS = [
+  { label: 'data-cnstrc-browse',       selector: '[data-cnstrc-browse]' },
+  { label: 'data-cnstrc-filter-name',  selector: '[data-cnstrc-filter-name]' },
+  { label: 'data-cnstrc-filter-value', selector: '[data-cnstrc-filter-value]' },
+  { label: 'data-cnstrc-num-results',  selector: '[data-cnstrc-num-results]' },
+  { label: 'data-cnstrc-item-id',      selector: '[data-cnstrc-item-id]' },
 ];
 
 // ─────────────────────────────────────────
-// HISTORIAL LEGADO (reconstruido del dashboard manual previo)
-// Marcado explícitamente como "manual_legacy": no viene de scraping
-// automático verificado, sino de la carga manual que existía antes.
+// MATRIZ DE CHECKS (según lista esencial de Constructor)
+//
+// Cada check declara:
+//  - section, label, page, y (selector | expr)
+//  - applies(site): función que decide si el atributo aplica a ESE banner
+//  - conditional: 'atc'  → solo se exige si la página tiene add_to_cart
+//  - notVerifiable: true → depende de interacción (no verificable en scraping pasivo)
+//
+// applies() devuelve true=esencial, false=N/A (no penaliza el score)
 // ─────────────────────────────────────────
-const LEGACY_HISTORY = {
-  paris: [
-    { date: '2026-06-15', source: 'manual_legacy', tags: { 'data-cnstrc-product-detail': 'OK' } },
-    { date: '2026-06-17', source: 'manual_legacy', tags: {
-      'window.cnstrc.userId': 'OK', 'window.cnstrc.testCell': 'MISSING', 'window.cnstrc.userSegments': 'MISSING', 'serviceURL': 'OK',
-      'data-cnstrc-search-form': 'OK', 'data-cnstrc-search-input': 'OK', 'data-cnstrc-search-submit-btn': 'OK', 'data-cnstrc-autosuggest': 'MISSING',
-      'data-cnstrc-item-section (srch)': 'MISSING', 'data-cnstrc-item-group': 'MISSING',
-      'script#cnstrc-data': 'MISSING', 'data-cnstrc-search': 'OK', 'data-cnstrc-result-id': 'OK', 'data-cnstrc-num-results': 'OK',
-      'data-cnstrc-item-id (PLP)': 'OK', 'data-cnstrc-item-name (PLP)': 'OK', 'data-cnstrc-item-variation-id (PLP)': 'OK', 'data-cnstrc-item-price (PLP)': 'OK', 'data-cnstrc-btn (PLP)': 'OK',
-      'data-cnstrc-product-detail': 'OK', 'data-cnstrc-item-id (PDP)': 'OK', 'data-cnstrc-item-name (PDP)': 'OK', 'data-cnstrc-item-variation-id (PDP)': 'MISSING', 'data-cnstrc-item-price (PDP)': 'OK', 'data-cnstrc-btn (PDP)': 'MISSING',
-      'data-cnstrc-recommendations': 'OK', 'data-cnstrc-recommendations-pod-id': 'OK', 'data-cnstrc-strategy-id': 'OK',
-    }},
-    { date: '2026-06-18', source: 'manual_legacy', tags: {
-      'window.cnstrc.userId': 'OK', 'window.cnstrc.testCell': 'MISSING', 'window.cnstrc.userSegments': 'MISSING', 'serviceURL': 'OK',
-      'data-cnstrc-search-form': 'OK', 'data-cnstrc-search-input': 'OK', 'data-cnstrc-search-submit-btn': 'OK', 'data-cnstrc-autosuggest': 'MISSING',
-      'data-cnstrc-item-section (srch)': 'MISSING', 'data-cnstrc-item-group': 'MISSING',
-      'script#cnstrc-data': 'MISSING', 'data-cnstrc-search': 'OK', 'data-cnstrc-result-id': 'OK', 'data-cnstrc-num-results': 'OK',
-      'data-cnstrc-item-id (PLP)': 'OK', 'data-cnstrc-item-name (PLP)': 'OK', 'data-cnstrc-item-variation-id (PLP)': 'OK', 'data-cnstrc-item-price (PLP)': 'OK', 'data-cnstrc-btn (PLP)': 'OK',
-      'data-cnstrc-product-detail': 'OK', 'data-cnstrc-item-id (PDP)': 'OK', 'data-cnstrc-item-name (PDP)': 'OK', 'data-cnstrc-item-variation-id (PDP)': 'MISSING', 'data-cnstrc-item-price (PDP)': 'OK', 'data-cnstrc-btn (PDP)': 'MISSING',
-      'data-cnstrc-recommendations': 'OK', 'data-cnstrc-recommendations-pod-id': 'OK', 'data-cnstrc-strategy-id': 'OK',
-    }},
-  ],
-  easy: [
-    { date: '2026-06-15', source: 'manual_legacy', tags: { 'data-cnstrc-product-detail': 'OK' } },
-    { date: '2026-06-17', source: 'manual_legacy', tags: {
-      'window.cnstrc.userId': 'MISSING', 'window.cnstrc.testCell': 'MISSING', 'window.cnstrc.userSegments': 'MISSING', 'serviceURL': 'MISSING',
-      'data-cnstrc-search-form': 'OK', 'data-cnstrc-search-input': 'OK', 'data-cnstrc-search-submit-btn': 'OK', 'data-cnstrc-autosuggest': 'MISSING',
-      'data-cnstrc-item-section (srch)': 'MISSING', 'data-cnstrc-item-group': 'MISSING',
-      'script#cnstrc-data': 'OK', 'data-cnstrc-search': 'OK', 'data-cnstrc-result-id': 'OK', 'data-cnstrc-num-results': 'OK',
-      'data-cnstrc-item-id (PLP)': 'OK', 'data-cnstrc-item-name (PLP)': 'OK', 'data-cnstrc-item-variation-id (PLP)': 'MISSING', 'data-cnstrc-item-price (PLP)': 'OK', 'data-cnstrc-btn (PLP)': 'OK',
-      'data-cnstrc-product-detail': 'OK', 'data-cnstrc-item-id (PDP)': 'OK', 'data-cnstrc-item-name (PDP)': 'OK', 'data-cnstrc-item-variation-id (PDP)': 'MISSING', 'data-cnstrc-item-price (PDP)': 'OK', 'data-cnstrc-btn (PDP)': 'OK',
-      'data-cnstrc-recommendations': 'MISSING', 'data-cnstrc-recommendations-pod-id': 'MISSING', 'data-cnstrc-strategy-id': 'MISSING',
-    }},
-    { date: '2026-06-18', source: 'manual_legacy', tags: {
-      'window.cnstrc.userId': 'MISSING', 'window.cnstrc.testCell': 'MISSING', 'window.cnstrc.userSegments': 'MISSING', 'serviceURL': 'MISSING',
-      'data-cnstrc-search-form': 'OK', 'data-cnstrc-search-input': 'OK', 'data-cnstrc-search-submit-btn': 'OK', 'data-cnstrc-autosuggest': 'MISSING',
-      'data-cnstrc-item-section (srch)': 'MISSING', 'data-cnstrc-item-group': 'MISSING',
-      'script#cnstrc-data': 'OK', 'data-cnstrc-search': 'OK', 'data-cnstrc-result-id': 'OK', 'data-cnstrc-num-results': 'OK',
-      'data-cnstrc-item-id (PLP)': 'OK', 'data-cnstrc-item-name (PLP)': 'OK', 'data-cnstrc-item-variation-id (PLP)': 'MISSING', 'data-cnstrc-item-price (PLP)': 'OK', 'data-cnstrc-btn (PLP)': 'OK',
-      'data-cnstrc-product-detail': 'OK', 'data-cnstrc-item-id (PDP)': 'OK', 'data-cnstrc-item-name (PDP)': 'OK', 'data-cnstrc-item-variation-id (PDP)': 'MISSING', 'data-cnstrc-item-price (PDP)': 'OK', 'data-cnstrc-btn (PDP)': 'OK',
-      'data-cnstrc-recommendations': 'MISSING', 'data-cnstrc-recommendations-pod-id': 'MISSING', 'data-cnstrc-strategy-id': 'MISSING',
-    }},
-  ],
-  jumbo: [
-    { date: '2026-06-15', source: 'manual_legacy', tags: { 'data-cnstrc-product-detail': 'OK' } },
-    { date: '2026-06-17', source: 'manual_legacy', tags: {
-      'window.cnstrc.userId': 'MISSING', 'window.cnstrc.testCell': 'MISSING', 'window.cnstrc.userSegments': 'MISSING', 'serviceURL': 'OK',
-      'data-cnstrc-search-form': 'OK', 'data-cnstrc-search-input': 'OK', 'data-cnstrc-search-submit-btn': 'OK', 'data-cnstrc-autosuggest': 'OK',
-      'data-cnstrc-item-section (srch)': 'OK', 'data-cnstrc-item-group': 'MISSING',
-      'script#cnstrc-data': 'MISSING', 'data-cnstrc-search': 'OK', 'data-cnstrc-result-id': 'MISSING', 'data-cnstrc-num-results': 'OK',
-      'data-cnstrc-product-detail': 'OK', 'data-cnstrc-item-id (PDP)': 'OK', 'data-cnstrc-item-name (PDP)': 'OK', 'data-cnstrc-item-variation-id (PDP)': 'MISSING', 'data-cnstrc-item-price (PDP)': 'OK', 'data-cnstrc-btn (PDP)': 'OK',
-      'data-cnstrc-recommendations': 'OK', 'data-cnstrc-recommendations-pod-id': 'MISSING', 'data-cnstrc-strategy-id': 'MISSING',
-    }},
-    { date: '2026-06-18', source: 'manual_legacy', tags: {
-      'window.cnstrc.userId': 'MISSING', 'window.cnstrc.testCell': 'MISSING', 'window.cnstrc.userSegments': 'MISSING', 'serviceURL': 'OK',
-      'data-cnstrc-search-form': 'OK', 'data-cnstrc-search-input': 'OK', 'data-cnstrc-search-submit-btn': 'OK', 'data-cnstrc-autosuggest': 'OK',
-      'data-cnstrc-item-section (srch)': 'OK', 'data-cnstrc-item-group': 'MISSING',
-      'script#cnstrc-data': 'MISSING', 'data-cnstrc-search': 'OK', 'data-cnstrc-result-id': 'MISSING', 'data-cnstrc-num-results': 'OK',
-      'data-cnstrc-product-detail': 'OK', 'data-cnstrc-item-id (PDP)': 'OK', 'data-cnstrc-item-name (PDP)': 'OK', 'data-cnstrc-item-variation-id (PDP)': 'MISSING', 'data-cnstrc-item-price (PDP)': 'OK', 'data-cnstrc-btn (PDP)': 'OK',
-      'data-cnstrc-recommendations': 'OK', 'data-cnstrc-recommendations-pod-id': 'MISSING', 'data-cnstrc-strategy-id': 'MISSING',
-    }},
-  ],
-  santaisabel: [
-    { date: '2026-06-15', source: 'manual_legacy', tags: { 'data-cnstrc-product-detail': 'OK' } },
-    { date: '2026-06-17', source: 'manual_legacy', tags: {
-      'window.cnstrc.userId': 'MISSING', 'window.cnstrc.testCell': 'MISSING', 'window.cnstrc.userSegments': 'MISSING', 'serviceURL': 'OK',
-      'data-cnstrc-search-form': 'OK', 'data-cnstrc-search-input': 'OK', 'data-cnstrc-search-submit-btn': 'OK', 'data-cnstrc-autosuggest': 'OK',
-      'data-cnstrc-item-section (srch)': 'OK', 'data-cnstrc-item-group': 'MISSING',
-      'script#cnstrc-data': 'MISSING', 'data-cnstrc-search': 'OK', 'data-cnstrc-result-id': 'MISSING', 'data-cnstrc-num-results': 'OK',
-      'data-cnstrc-product-detail': 'OK', 'data-cnstrc-item-id (PDP)': 'OK', 'data-cnstrc-item-name (PDP)': 'OK', 'data-cnstrc-item-variation-id (PDP)': 'MISSING', 'data-cnstrc-item-price (PDP)': 'OK', 'data-cnstrc-btn (PDP)': 'OK',
-      'data-cnstrc-recommendations': 'OK', 'data-cnstrc-recommendations-pod-id': 'MISSING', 'data-cnstrc-strategy-id': 'MISSING',
-    }},
-    { date: '2026-06-18', source: 'manual_legacy', tags: {
-      'window.cnstrc.userId': 'MISSING', 'window.cnstrc.testCell': 'MISSING', 'window.cnstrc.userSegments': 'MISSING', 'serviceURL': 'OK',
-      'data-cnstrc-search-form': 'OK', 'data-cnstrc-search-input': 'OK', 'data-cnstrc-search-submit-btn': 'OK', 'data-cnstrc-autosuggest': 'OK',
-      'data-cnstrc-item-section (srch)': 'OK', 'data-cnstrc-item-group': 'MISSING',
-      'script#cnstrc-data': 'MISSING', 'data-cnstrc-search': 'OK', 'data-cnstrc-result-id': 'MISSING', 'data-cnstrc-num-results': 'OK',
-      'data-cnstrc-product-detail': 'OK', 'data-cnstrc-item-id (PDP)': 'OK', 'data-cnstrc-item-name (PDP)': 'OK', 'data-cnstrc-item-variation-id (PDP)': 'MISSING', 'data-cnstrc-item-price (PDP)': 'OK', 'data-cnstrc-btn (PDP)': 'OK',
-      'data-cnstrc-recommendations': 'OK', 'data-cnstrc-recommendations-pod-id': 'MISSING', 'data-cnstrc-strategy-id': 'MISSING',
-    }},
-  ],
-};
+const ALWAYS = () => true;
+const ONLY_PARIS = (s) => !s.usesVariationDedup;        // variation-id solo Paris
+const ONLY_RECS = (s) => s.hasRecommendations;          // recomendaciones solo Paris
+
+const TAG_CHECKS = [
+  // ── 1 — Global / Window ─────────────────
+  { section: '1 — Global (Window)', label: 'window.cnstrc.userId', page: 'home', type: 'window',
+    expr: 'window.cnstrc && !!window.cnstrc.userId', applies: ALWAYS },
+  { section: '1 — Global (Window)', label: 'purchaseData (estructura completa)', page: 'pdp', type: 'window',
+    expr: 'window.cnstrc && !!window.cnstrc.purchaseData', applies: ALWAYS, requiresCheckout: true },
+
+  // ── 2 — Autocomplete ────────────────────
+  { section: '2 — Autocomplete', label: 'data-cnstrc-search-form', page: 'home', type: 'selector',
+    selector: '[data-cnstrc-search-form]', applies: ALWAYS },
+  { section: '2 — Autocomplete', label: 'data-cnstrc-search-input', page: 'home', type: 'selector',
+    selector: '[data-cnstrc-search-input]', applies: ALWAYS },
+  { section: '2 — Autocomplete', label: 'data-cnstrc-search-submit-btn', page: 'home', type: 'selector',
+    selector: '[data-cnstrc-search-submit-btn]', applies: ALWAYS },
+  { section: '2 — Autocomplete', label: 'data-cnstrc-autosuggest', page: 'search', type: 'selector',
+    selector: '[data-cnstrc-autosuggest]', applies: ALWAYS, notVerifiable: true },
+  { section: '2 — Autocomplete', label: 'data-cnstrc-item-section', page: 'search', type: 'selector',
+    selector: '[data-cnstrc-item-section]', applies: ALWAYS, notVerifiable: true },
+  { section: '2 — Autocomplete', label: 'data-cnstrc-item-id (autocomplete)', page: 'search', type: 'selector',
+    selector: '[data-cnstrc-item-id]', applies: ALWAYS, notVerifiable: true },
+
+  // ── 3 — Search PLP ──────────────────────
+  { section: '3 — Search PLP', label: 'data-cnstrc-search', page: 'plp', type: 'selector',
+    selector: '[data-cnstrc-search]', applies: ALWAYS },
+  { section: '3 — Search PLP', label: 'data-cnstrc-num-results', page: 'plp', type: 'selector',
+    selector: '[data-cnstrc-num-results]', applies: ALWAYS },
+  { section: '3 — Search PLP', label: 'data-cnstrc-item-id (PLP)', page: 'plp', type: 'selector',
+    selector: '[data-cnstrc-item-id]', applies: ALWAYS },
+  { section: '3 — Search PLP', label: 'data-cnstrc-item-variation-id (PLP)', page: 'plp', type: 'selector',
+    selector: '[data-cnstrc-item-variation-id]', applies: ONLY_PARIS },
+  { section: '3 — Search PLP', label: 'data-cnstrc-item-price (PLP)', page: 'plp', type: 'selector',
+    selector: '[data-cnstrc-item-price]', applies: ALWAYS, conditional: 'atc' },
+  { section: '3 — Search PLP', label: 'data-cnstrc-btn (PLP)', page: 'plp', type: 'selector',
+    selector: '[data-cnstrc-btn]', applies: ALWAYS, conditional: 'atc' },
+
+  // ── 4 — Browse PLP (Categoría + Colección) ──
+  // Nota: reusa plpUrl como categoría; browseCollection como colección (placeholder).
+  { section: '4 — Browse PLP', label: 'data-cnstrc-browse', page: 'plp', type: 'selector',
+    selector: '[data-cnstrc-browse]', applies: ALWAYS },
+  { section: '4 — Browse PLP', label: 'data-cnstrc-filter-name', page: 'plp', type: 'selector',
+    selector: '[data-cnstrc-filter-name]', applies: ALWAYS },
+  { section: '4 — Browse PLP', label: 'data-cnstrc-filter-value', page: 'plp', type: 'selector',
+    selector: '[data-cnstrc-filter-value]', applies: ALWAYS },
+  // Nota: las colecciones de home se chequean aparte (descubrimiento dinámico),
+  // no como fila fija acá. Ver checkCollections() y sección '4b — Colecciones (Home)'.
+
+  // ── 5 — PDP ─────────────────────────────
+  { section: '5 — PDP', label: 'data-cnstrc-product-detail', page: 'pdp', type: 'selector',
+    selector: '[data-cnstrc-product-detail]', applies: ALWAYS },
+  { section: '5 — PDP', label: 'data-cnstrc-item-id (PDP)', page: 'pdp', type: 'selector',
+    selector: '[data-cnstrc-item-id]', applies: ALWAYS },
+  { section: '5 — PDP', label: 'data-cnstrc-item-variation-id (PDP)', page: 'pdp', type: 'selector',
+    selector: '[data-cnstrc-item-variation-id]', applies: ONLY_PARIS },
+  { section: '5 — PDP', label: 'data-cnstrc-item-price (PDP)', page: 'pdp', type: 'selector',
+    selector: '[data-cnstrc-item-price]', applies: ALWAYS },
+  { section: '5 — PDP', label: 'data-cnstrc-btn="add_to_cart" (PDP)', page: 'pdp', type: 'selector',
+    selector: '[data-cnstrc-btn]', applies: ALWAYS },
+
+  // ── 6 — Carruseles con ATC (home) ───────
+  // Solo se exige si el carrusel permite add_to_cart (conditional atc).
+  { section: '6 — Carruseles ATC (Home)', label: 'data-cnstrc-item-id (carrusel)', page: 'home', type: 'selector',
+    selector: '[data-cnstrc-item-id]', applies: ALWAYS, conditional: 'atc' },
+  { section: '6 — Carruseles ATC (Home)', label: 'data-cnstrc-item-variation-id (carrusel)', page: 'home', type: 'selector',
+    selector: '[data-cnstrc-item-variation-id]', applies: ONLY_PARIS, conditional: 'atc' },
+  { section: '6 — Carruseles ATC (Home)', label: 'data-cnstrc-item-price (carrusel)', page: 'home', type: 'selector',
+    selector: '[data-cnstrc-item-price]', applies: ALWAYS, conditional: 'atc' },
+  { section: '6 — Carruseles ATC (Home)', label: 'data-cnstrc-btn (carrusel)', page: 'home', type: 'selector',
+    selector: '[data-cnstrc-btn]', applies: ALWAYS, conditional: 'atc' },
+
+  // ── 7 — Recomendaciones (solo Paris) ────
+  { section: '7 — Recomendaciones', label: 'data-cnstrc-recommendations', page: 'pdp', type: 'selector',
+    selector: '[data-cnstrc-recommendations]', applies: ONLY_RECS },
+  { section: '7 — Recomendaciones', label: 'data-cnstrc-recommendations-pod-id', page: 'pdp', type: 'selector',
+    selector: '[data-cnstrc-recommendations-pod-id]', applies: ONLY_RECS },
+  { section: '7 — Recomendaciones', label: 'data-cnstrc-result-id', page: 'pdp', type: 'selector',
+    selector: '[data-cnstrc-result-id]', applies: ONLY_RECS },
+  { section: '7 — Recomendaciones', label: 'data-cnstrc-num-results (recs)', page: 'pdp', type: 'selector',
+    selector: '[data-cnstrc-num-results]', applies: ONLY_RECS },
+  { section: '7 — Recomendaciones', label: 'data-cnstrc-item-id (recs)', page: 'pdp', type: 'selector',
+    selector: '[data-cnstrc-item-id]', applies: ONLY_RECS },
+  { section: '7 — Recomendaciones', label: 'data-cnstrc-item-variation-id (recs)', page: 'pdp', type: 'selector',
+    selector: '[data-cnstrc-item-variation-id]', applies: ONLY_RECS },
+];
 
 // Textos típicos de botones de modales de cookies / selección de comuna (es-CL)
 const DISMISS_BUTTON_TEXTS = [
@@ -208,9 +227,16 @@ async function dismissModals(page) {
   }
 }
 
+// Detecta si una página tiene add_to_cart de Constructor (para checks condicionales)
+async function pageHasATC(page) {
+  try {
+    const el = await page.$('[data-cnstrc-btn="add_to_cart"], [data-cnstrc-btn]');
+    return el !== null;
+  } catch { return false; }
+}
+
 // ─────────────────────────────────────────
 // POLLING — reintenta antes de marcar MISSING
-// Descarta que sea timing (valor seteado async) vs gap real
 // ─────────────────────────────────────────
 async function pollCheck(page, tag, attempts = 6, delayMs = 1000) {
   for (let i = 0; i < attempts; i++) {
@@ -227,6 +253,103 @@ async function pollCheck(page, tag, attempts = 6, delayMs = 1000) {
   }
   return false;
 }
+
+// ─────────────────────────────────────────
+// COLECCIONES DE HOME — descubrimiento dinámico
+// Levanta la home, junta los <a> que matcheen los patrones del banner,
+// sigue hasta MAX_COLLECTIONS_PER_SITE y chequea los tags de Browse en cada una.
+// Devuelve: { measured: [{url, tags:{...}, pct}], summaryPct, discovered }
+// ─────────────────────────────────────────
+async function discoverCollectionLinks(page, site) {
+  // Junta todos los href visibles y filtra por los patrones del banner.
+  const hrefs = await page.evaluate(() => {
+    const out = [];
+    document.querySelectorAll('a[href]').forEach(a => out.push(a.getAttribute('href')));
+    return out;
+  });
+
+  const patterns = site.collectionLinkPatterns || [];
+  const seen = new Set();
+  const matched = [];
+  for (const href of hrefs) {
+    if (!href) continue;
+    if (!patterns.some(p => href.includes(p))) continue;
+    // Normalizo a URL absoluta
+    let abs;
+    try { abs = new URL(href, site.homeUrl).toString(); } catch { continue; }
+    if (seen.has(abs)) continue;      // dedup: un mismo destino puede estar linkeado 2 veces
+    seen.add(abs);
+    matched.push(abs);
+    if (matched.length >= MAX_COLLECTIONS_PER_SITE) break;
+  }
+  return matched;
+}
+
+async function checkCollections(context, site) {
+  const page = await context.newPage();
+  const result = { measured: [], summaryPct: null, discovered: 0 };
+
+  try {
+    await page.goto(site.homeUrl, { waitUntil: 'networkidle', timeout: 60000 }).catch(async () => {
+      await page.goto(site.homeUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    });
+    await dismissModals(page);
+    await page.waitForTimeout(3000);
+
+    const links = await discoverCollectionLinks(page, site);
+    result.discovered = links.length;
+
+    if (links.length === 0) {
+      // Home sin bloques de colección reconocibles ese día → N/V, no penaliza.
+      console.log(`  ⚠️  ${site.name}: 0 colecciones descubiertas (patrón: ${(site.collectionLinkPatterns||[]).join(', ')})`);
+      await page.close();
+      return result;
+    }
+
+    console.log(`  🔗 ${site.name}: ${links.length} colecciones descubiertas`);
+
+    // Tags a chequear: base + variation-id solo si Paris
+    const checks = [...COLLECTION_TAG_CHECKS];
+    if (!site.usesVariationDedup) {
+      checks.push({ label: 'data-cnstrc-item-variation-id', selector: '[data-cnstrc-item-variation-id]' });
+    }
+
+    let okColls = 0;
+    for (const url of links) {
+      const collResult = { url, tags: {}, pct: 0 };
+      try {
+        await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 }).catch(async () => {
+          await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 35000 });
+        });
+        await dismissModals(page);
+        await page.waitForTimeout(3000);
+
+        let ok = 0;
+        for (const c of checks) {
+          const found = await pollCheck(page, { type: 'selector', selector: c.selector }, 4, 900);
+          collResult.tags[c.label] = found ? 'OK' : 'MISSING';
+          if (found) ok++;
+        }
+        collResult.pct = Math.round((ok / checks.length) * 100);
+        if (collResult.pct === 100) okColls++;
+        console.log(`     ${collResult.pct === 100 ? '✅' : '⚠️'} ${collResult.pct}% — ${url.slice(0, 70)}`);
+      } catch (err) {
+        collResult.error = err.message;
+        console.log(`     ❌ error — ${url.slice(0, 70)}: ${err.message}`);
+      }
+      result.measured.push(collResult);
+    }
+
+    // Summary: % de colecciones con todos los tags OK
+    result.summaryPct = links.length > 0 ? Math.round((okColls / links.length) * 100) : null;
+  } catch (err) {
+    console.log(`  ⚠️  ${site.name}: no se pudo procesar colecciones: ${err.message}`);
+  }
+
+  await page.close();
+  return result;
+}
+
 async function checkSite(browser, site) {
   console.log(`\n🔍 Chequeando ${site.name}...`);
   const context = await browser.newContext({
@@ -237,36 +360,45 @@ async function checkSite(browser, site) {
   const page = await context.newPage();
 
   const pageCache = {};
+  const pageATC = {};   // cache de add_to_cart detectado por página
   const results = {};
 
   async function ensurePage(pageType) {
-    if (pageCache[pageType]) return true;
-    const urlMap = { home: site.homeUrl, search: site.searchUrl, plp: site.plpUrl, pdp: site.pdpUrl };
-    const url = urlMap[pageType];
-    if (!url || url.includes('PLACEHOLDER')) return false;
+    if (pageType in pageCache) return pageCache[pageType];
+    const url = site[PAGES[pageType].urlKey];
+    if (!url || url === 'PLACEHOLDER' || url.includes('PLACEHOLDER')) {
+      pageCache[pageType] = false;
+      return false;
+    }
     try {
       await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
       await dismissModals(page);
-      await page.waitForTimeout(3500); // dar tiempo a hidratación de componentes JS
+      await page.waitForTimeout(3500);
       pageCache[pageType] = true;
-      return true;
     } catch (err) {
-      // networkidle puede fallar en sitios con polling constante; reintentar con domcontentloaded
       try {
         await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
         await dismissModals(page);
         await page.waitForTimeout(4000);
         pageCache[pageType] = true;
-        return true;
       } catch (err2) {
         console.log(`  ⚠️  No se pudo cargar ${pageType} (${url}): ${err2.message}`);
         pageCache[pageType] = false;
-        return false;
       }
     }
+    if (pageCache[pageType]) {
+      pageATC[pageType] = await pageHasATC(page);
+    }
+    return pageCache[pageType];
   }
 
   for (const tag of TAG_CHECKS) {
+    // 1) ¿Aplica a este banner?  (variation-id/recs → N/A donde corresponde)
+    if (!tag.applies(site)) {
+      results[tag.label] = 'N/A';
+      continue;
+    }
+    // 2) purchaseData: requiere checkout, no verificable en scraping pasivo
     if (tag.requiresCheckout) {
       results[tag.label] = 'N/V';
       continue;
@@ -274,15 +406,20 @@ async function checkSite(browser, site) {
 
     const loaded = await ensurePage(tag.page);
     if (!loaded) {
-      results[tag.label] = tag.notApplicable ? 'N/A' : 'N/V';
+      // URL placeholder (browse-colección) o página caída → N/V
+      results[tag.label] = 'N/V';
+      continue;
+    }
+
+    // 3) Condicional ATC: si la página no tiene add_to_cart, el atributo no se exige
+    if (tag.conditional === 'atc' && !pageATC[tag.page]) {
+      results[tag.label] = 'N/A';
       continue;
     }
 
     try {
       const found = await pollCheck(page, tag);
-      if (!found && tag.notApplicable) {
-        results[tag.label] = 'N/A';
-      } else if (!found && tag.notVerifiable) {
+      if (!found && tag.notVerifiable) {
         results[tag.label] = 'N/V';
       } else {
         results[tag.label] = found ? 'OK' : 'MISSING';
@@ -293,8 +430,12 @@ async function checkSite(browser, site) {
     }
   }
 
+  // Colecciones de home (descubrimiento dinámico) — reusa el mismo context
+  console.log(`  🧭 ${site.name}: chequeando colecciones de home...`);
+  const collections = await checkCollections(context, site);
+
   await context.close();
-  return results;
+  return { results, collections };
 }
 
 // ─────────────────────────────────────────
@@ -304,15 +445,6 @@ function loadHistory() {
   let history = {};
   if (fs.existsSync(HISTORY_PATH)) {
     try { history = JSON.parse(fs.readFileSync(HISTORY_PATH, 'utf-8')); } catch { history = {}; }
-  }
-  // Sembrar histórico legado una sola vez (si esas fechas no existen todavía)
-  for (const siteKey of Object.keys(LEGACY_HISTORY)) {
-    if (!history[siteKey]) history[siteKey] = [];
-    for (const legacyEntry of LEGACY_HISTORY[siteKey]) {
-      const exists = history[siteKey].some(h => h.date === legacyEntry.date);
-      if (!exists) history[siteKey].push(legacyEntry);
-    }
-    history[siteKey].sort((a, b) => a.date.localeCompare(b.date));
   }
   return history;
 }
@@ -326,23 +458,36 @@ function todayStr() {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santiago' });
 }
 
-function scoreOf(tagResults) {
-  const verificable = TAG_CHECKS.filter(t => !t.notVerifiable && !t.notApplicable && !t.requiresCheckout);
-  const ok = verificable.filter(t => tagResults[t.label] === 'OK').length;
-  return { ok, total: verificable.length, pct: Math.round((ok / verificable.length) * 100) };
+// Score cuenta SOLO atributos aplicables y verificables para ESE banner.
+// N/A y N/V no penalizan (esto elimina los falsos positivos del %).
+function scoreOf(site, tagResults) {
+  const applicable = TAG_CHECKS.filter(t => {
+    if (typeof t.applies === 'function' && !t.applies(site)) return false;
+    if (t.requiresCheckout || t.notVerifiable) return false;
+    return true;
+  });
+  let ok = 0, counted = 0;
+  for (const t of applicable) {
+    const v = tagResults[t.label];
+    if (v === 'N/A' || v === 'N/V' || v === undefined || v === '—') continue;
+    counted++;
+    if (v === 'OK') ok++;
+  }
+  const pct = counted > 0 ? Math.round((ok / counted) * 100) : 0;
+  return { ok, total: counted, pct };
 }
 
 // ─────────────────────────────────────────
-// GRÁFICO DE BARRAS — % de cobertura por fecha
+// GRÁFICO DE BARRAS
 // ─────────────────────────────────────────
-function generateChart(siteHistory) {
+function generateChart(site, siteHistory) {
   if (siteHistory.length === 0) return '';
   const W = 700, H = 140, padBottom = 28, padTop = 10, barGap = 8;
   const barW = Math.min(48, (W - barGap * (siteHistory.length + 1)) / siteHistory.length);
   const usableH = H - padBottom - padTop;
 
   const bars = siteHistory.map((h, i) => {
-    const sc = scoreOf(h.tags);
+    const sc = scoreOf(site, h.tags);
     const x = barGap + i * (barW + barGap);
     const barH = (sc.pct / 100) * usableH;
     const y = padTop + (usableH - barH);
@@ -362,27 +507,58 @@ function generateChart(siteHistory) {
 }
 
 // ─────────────────────────────────────────
-// HTML — diseño claro, estilo original
+// HTML
 // ─────────────────────────────────────────
+// Render del bloque de colecciones descubiertas del último día
+function renderCollections(lastEntry) {
+  const coll = lastEntry && lastEntry.collections;
+  if (!coll) {
+    return `<div class="coll-block"><div class="coll-title">Colecciones de Home</div>
+      <div class="coll-empty">Sin datos de colecciones (versión previa del monitor).</div></div>`;
+  }
+  if (!coll.measured || coll.measured.length === 0) {
+    return `<div class="coll-block"><div class="coll-title">Colecciones de Home</div>
+      <div class="coll-empty">0 colecciones descubiertas en la home ese día (N/V — no penaliza el score). Revisar patrón de link o layout de home.</div></div>`;
+  }
+  const rows = coll.measured.map(c => {
+    const cls = c.error ? 'err' : c.pct === 100 ? 'ok' : c.pct >= 50 ? 'warn' : 'err';
+    const missing = c.tags ? Object.entries(c.tags).filter(([, v]) => v === 'MISSING').map(([k]) => k) : [];
+    const detail = c.error ? `error: ${c.error}` : (missing.length ? `faltan: ${missing.join(', ')}` : 'todos OK');
+    return `<tr>
+      <td class="coll-url" title="${c.url}">${c.url.replace(/^https?:\/\//, '').slice(0, 60)}…</td>
+      <td class="coll-pct ${cls}">${c.error ? 'ERR' : c.pct + '%'}</td>
+      <td class="coll-detail">${detail}</td>
+    </tr>`;
+  }).join('');
+  const summary = coll.summaryPct !== null ? `${coll.summaryPct}% con todos los tags OK` : 'N/V';
+  return `<div class="coll-block">
+    <div class="coll-title">Colecciones de Home <span class="coll-summary">${coll.discovered} descubiertas · ${summary}</span></div>
+    <table class="coll-table"><tbody>${rows}</tbody></table>
+    <div class="coll-note">Descubrimiento dinámico: las colecciones cambian día a día. Se mide "¿el tag de Browse está presente en las colecciones vivas de hoy?", no una promo puntual trazable.</div>
+  </div>`;
+}
+
 function generateHtml(history) {
   const sections = [...new Set(TAG_CHECKS.map(t => t.section))];
 
   const siteCards = SITES.map(site => {
     const siteHistory = history[site.key] || [];
     const last = siteHistory[siteHistory.length - 1];
-    const lastScore = last ? scoreOf(last.tags) : { pct: 0 };
+    const lastScore = last ? scoreOf(site, last.tags) : { pct: 0 };
 
     const dateHeaders = siteHistory.map(h => {
-      const sc = scoreOf(h.tags);
-      const legacyTag = h.source === 'manual_legacy' ? '<span class="legacy-tag" title="Carga manual histórica, no scraping automático">hist.</span>' : '';
+      const sc = scoreOf(site, h.tags);
+      const legacyTag = h.source === 'manual_legacy' ? '<span class="legacy-tag" title="Carga manual histórica">hist.</span>' : '';
       return `<th><div class="date-score ${sc.pct >= 80 ? 'ok' : sc.pct >= 50 ? 'warn' : 'err'}">${sc.pct}%</div><div class="date-label">${h.date}${legacyTag}</div></th>`;
     }).join('');
 
     const sectionRows = sections.map(section => {
       const tagsInSection = TAG_CHECKS.filter(t => t.section === section);
       const rows = tagsInSection.map(tag => {
+        // Si el atributo no aplica al banner, lo mostramos como N/A permanente (sin ruido)
+        const naForBanner = typeof tag.applies === 'function' && !tag.applies(site);
         const cells = siteHistory.map(h => {
-          const v = h.tags[tag.label] || '—';
+          const v = naForBanner ? 'N/A' : (h.tags[tag.label] || '—');
           const cls = v === 'OK' ? 'ok' : v === 'MISSING' ? 'err' : 'neutral';
           return `<td class="${cls}">${v}</td>`;
         }).join('');
@@ -395,16 +571,17 @@ function generateHtml(history) {
     <div class="site-card" id="site-${site.key}">
       <div class="site-header">
         <div>
-          <div class="site-name">${site.name}</div>
-          <div class="site-meta">${siteHistory.length} ejecuciones registradas</div>
+          <div class="site-name">${site.name}${site.sisa ? ' <span class="sisa-tag" title="Verificar que corresponde a SisaCL en logs de Constructor">SISA?</span>' : ''}</div>
+          <div class="site-meta">${siteHistory.length} ejecuciones · Recs: ${site.hasRecommendations ? 'sí' : 'N/A'} · variation-id: ${site.usesVariationDedup ? 'N/A (dedup)' : 'esencial'}</div>
         </div>
         <div class="site-score ${lastScore.pct >= 80 ? 'ok' : lastScore.pct >= 50 ? 'warn' : 'err'}">${lastScore.pct}%</div>
       </div>
-      <div class="chart-wrap">${generateChart(siteHistory)}</div>
+      <div class="chart-wrap">${generateChart(site, siteHistory)}</div>
       <table class="event-table">
         <thead><tr><th>Tag</th>${dateHeaders}</tr></thead>
         <tbody>${sectionRows}</tbody>
       </table>
+      ${renderCollections(last)}
     </div>`;
   }).join('');
 
@@ -421,7 +598,8 @@ function generateHtml(history) {
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f7;color:#1d1d1f;padding:2rem}
   h1{font-size:20px;font-weight:600;margin-bottom:4px}
-  .subtitle{font-size:13px;color:#6e6e73;margin-bottom:1.5rem}
+  .subtitle{font-size:13px;color:#6e6e73;margin-bottom:1rem}
+  .disclaimer{background:#fff3cd;border:1px solid #ffe69c;color:#856404;font-size:12px;padding:10px 14px;border-radius:8px;margin-bottom:1.25rem}
   .tabs{display:flex;gap:8px;margin-bottom:1.5rem;flex-wrap:wrap}
   .tab-btn{background:#fff;border:1px solid #e5e5ea;color:#1d1d1f;padding:8px 16px;border-radius:99px;cursor:pointer;font-size:13px;font-weight:500}
   .tab-btn.active{background:#1d1d1f;color:#fff;border-color:#1d1d1f}
@@ -430,6 +608,7 @@ function generateHtml(history) {
   .site-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
   .site-name{font-size:16px;font-weight:600}
   .site-meta{font-size:12px;color:#6e6e73;margin-top:2px}
+  .sisa-tag{display:inline-block;background:#ffe69c;color:#856404;font-size:9px;padding:1px 5px;border-radius:4px;vertical-align:middle}
   .site-score{font-size:20px;font-weight:700;padding:6px 14px;border-radius:8px}
   .site-score.ok{background:#d4edda;color:#155724}
   .site-score.warn{background:#fff3cd;color:#856404}
@@ -451,15 +630,29 @@ function generateHtml(history) {
   .legacy-tag{display:inline-block;background:#e2e3e5;color:#41464b;font-size:9px;padding:1px 5px;border-radius:4px;margin-left:4px;text-transform:uppercase}
   .footer{font-size:11px;color:#aeaeb2;margin-top:1rem}
   .legend{font-size:11px;color:#6e6e73;margin-bottom:1rem}
+  .coll-block{margin-top:1.5rem;border-top:1px solid #e5e5ea;padding-top:1rem}
+  .coll-title{font-size:13px;font-weight:600;color:#1d1d1f;margin-bottom:8px}
+  .coll-summary{font-size:11px;font-weight:400;color:#6e6e73;margin-left:6px}
+  .coll-empty{font-size:12px;color:#856404;background:#fff3cd;border:1px solid #ffe69c;padding:8px 12px;border-radius:6px}
+  .coll-table{width:100%;border-collapse:collapse;font-size:11px}
+  .coll-table td{padding:6px 10px;border-bottom:1px solid #f5f5f7;vertical-align:middle}
+  .coll-url{font-family:monospace;color:#6e6e73;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .coll-pct{font-weight:700;text-align:center;width:52px;border-radius:6px}
+  .coll-pct.ok{color:#155724}
+  .coll-pct.warn{color:#856404}
+  .coll-pct.err{color:#721c24}
+  .coll-detail{color:#6e6e73}
+  .coll-note{font-size:10px;color:#aeaeb2;margin-top:8px;font-style:italic}
 </style>
 </head>
 <body>
 <h1>Constructor.io — Historial de Monitoreo · Cencosud Chile</h1>
 <div class="subtitle">Última actualización: <strong>${date}</strong> · Automatizado vía GitHub Actions (cron diario)</div>
-<div class="legend">OK · MISSING (en rojo) · N/A no aplica · N/V no verificable por scraping pasivo · — sin dato ese día · <span class="legacy-tag">hist.</span> = carga manual previa, no automatizada</div>
+<div class="disclaimer">⚠️ Este monitor valida <strong>presencia</strong> de atributos en el DOM, no la <strong>exactitud</strong> del dato (que el valor coincida con el catálogo). Constructor mantiene alertas propias para problemas no cubiertos aquí. Verde ≠ garantía de tracking correcto.</div>
+<div class="legend">OK · MISSING (rojo) · N/A no aplica a este banner (dedup de variaciones / sin recomendaciones / sin add_to_cart) · N/V no verificable por scraping pasivo · — sin dato</div>
 <div class="tabs">${tabs}</div>
 ${siteCards}
-<div class="footer">Generado automáticamente · Cencosud Chile · Constructor.io tag monitoring</div>
+<div class="footer">Generado automáticamente · Cencosud Chile · Constructor.io tag monitoring · v3</div>
 <script>
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -479,22 +672,30 @@ ${siteCards}
 // MAIN
 // ─────────────────────────────────────────
 async function main() {
-  console.log('🚀 Monitor de tags Constructor.io arrancando...');
+  console.log('🚀 Monitor de tags Constructor.io v3 arrancando...');
   const browser = await chromium.launch({ headless: true });
   const history = loadHistory();
   const today = todayStr();
 
   for (const site of SITES) {
-    const tagResults = await checkSite(browser, site);
+    const { results: tagResults, collections } = await checkSite(browser, site);
     if (!history[site.key]) history[site.key] = [];
     history[site.key] = history[site.key].filter(h => h.date !== today);
-    history[site.key].push({ date: today, source: 'automated', tags: tagResults });
+    history[site.key].push({
+      date: today,
+      source: 'automated',
+      tags: tagResults,
+      collections,   // { measured:[{url,tags,pct}], summaryPct, discovered }
+    });
     history[site.key].sort((a, b) => a.date.localeCompare(b.date));
     if (history[site.key].length > MAX_HISTORY_PER_SITE) {
       history[site.key] = history[site.key].slice(-MAX_HISTORY_PER_SITE);
     }
-    const score = scoreOf(tagResults);
-    console.log(`  📊 ${site.name}: ${score.ok}/${score.total} tags OK (${score.pct}%)`);
+    const score = scoreOf(site, tagResults);
+    const collInfo = collections.summaryPct !== null
+      ? `${collections.summaryPct}% colecciones OK (${collections.discovered} descubiertas)`
+      : `colecciones: N/V (0 descubiertas)`;
+    console.log(`  📊 ${site.name}: ${score.ok}/${score.total} tags OK (${score.pct}%) · ${collInfo}`);
   }
 
   await browser.close();
