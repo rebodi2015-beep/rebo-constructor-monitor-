@@ -1,49 +1,6 @@
 {
   "paris": [
     {
-      "date": "2026-07-22",
-      "source": "automated",
-      "tags": {
-        "window.cnstrc.userId": "MISSING",
-        "purchaseData (estructura completa)": "N/V",
-        "data-cnstrc-search-form": "MISSING",
-        "data-cnstrc-search-input": "MISSING",
-        "data-cnstrc-search-submit-btn": "MISSING",
-        "data-cnstrc-autosuggest": "N/V",
-        "data-cnstrc-item-section": "N/V",
-        "data-cnstrc-item-id (autocomplete)": "N/V",
-        "data-cnstrc-search": "MISSING",
-        "data-cnstrc-num-results": "MISSING",
-        "data-cnstrc-item-id (PLP)": "MISSING",
-        "data-cnstrc-item-variation-id (PLP)": "MISSING",
-        "data-cnstrc-item-price (PLP)": "N/A",
-        "data-cnstrc-btn (PLP)": "N/A",
-        "data-cnstrc-browse": "MISSING",
-        "data-cnstrc-filter-name": "MISSING",
-        "data-cnstrc-filter-value": "MISSING",
-        "data-cnstrc-product-detail": "MISSING",
-        "data-cnstrc-item-id (PDP)": "MISSING",
-        "data-cnstrc-item-variation-id (PDP)": "MISSING",
-        "data-cnstrc-item-price (PDP)": "MISSING",
-        "data-cnstrc-btn=\"add_to_cart\" (PDP)": "MISSING",
-        "data-cnstrc-item-id (carrusel)": "N/A",
-        "data-cnstrc-item-variation-id (carrusel)": "N/A",
-        "data-cnstrc-item-price (carrusel)": "N/A",
-        "data-cnstrc-btn (carrusel)": "N/A",
-        "data-cnstrc-recommendations": "MISSING",
-        "data-cnstrc-recommendations-pod-id": "MISSING",
-        "data-cnstrc-result-id": "MISSING",
-        "data-cnstrc-num-results (recs)": "MISSING",
-        "data-cnstrc-item-id (recs)": "MISSING",
-        "data-cnstrc-item-variation-id (recs)": "MISSING"
-      },
-      "collections": {
-        "measured": [],
-        "summaryPct": null,
-        "discovered": 0
-      }
-    },
-    {
       "date": "2026-07-23",
       "source": "automated",
       "tags": {
@@ -1249,6 +1206,49 @@
     },
     {
       "date": "2026-08-20",
+      "source": "automated",
+      "tags": {
+        "window.cnstrc.userId": "MISSING",
+        "purchaseData (estructura completa)": "N/V",
+        "data-cnstrc-search-form": "MISSING",
+        "data-cnstrc-search-input": "MISSING",
+        "data-cnstrc-search-submit-btn": "MISSING",
+        "data-cnstrc-autosuggest": "N/V",
+        "data-cnstrc-item-section": "N/V",
+        "data-cnstrc-item-id (autocomplete)": "N/V",
+        "data-cnstrc-search": "MISSING",
+        "data-cnstrc-num-results": "MISSING",
+        "data-cnstrc-item-id (PLP)": "MISSING",
+        "data-cnstrc-item-variation-id (PLP)": "MISSING",
+        "data-cnstrc-item-price (PLP)": "N/A",
+        "data-cnstrc-btn (PLP)": "N/A",
+        "data-cnstrc-browse": "MISSING",
+        "data-cnstrc-filter-name": "MISSING",
+        "data-cnstrc-filter-value": "MISSING",
+        "data-cnstrc-product-detail": "MISSING",
+        "data-cnstrc-item-id (PDP)": "MISSING",
+        "data-cnstrc-item-variation-id (PDP)": "MISSING",
+        "data-cnstrc-item-price (PDP)": "MISSING",
+        "data-cnstrc-btn=\"add_to_cart\" (PDP)": "MISSING",
+        "data-cnstrc-item-id (carrusel)": "N/A",
+        "data-cnstrc-item-variation-id (carrusel)": "N/A",
+        "data-cnstrc-item-price (carrusel)": "N/A",
+        "data-cnstrc-btn (carrusel)": "N/A",
+        "data-cnstrc-recommendations": "MISSING",
+        "data-cnstrc-recommendations-pod-id": "MISSING",
+        "data-cnstrc-result-id": "MISSING",
+        "data-cnstrc-num-results (recs)": "MISSING",
+        "data-cnstrc-item-id (recs)": "MISSING",
+        "data-cnstrc-item-variation-id (recs)": "MISSING"
+      },
+      "collections": {
+        "measured": [],
+        "summaryPct": null,
+        "discovered": 0
+      }
+    },
+    {
+      "date": "2026-08-21",
       "source": "automated",
       "tags": {
         "window.cnstrc.userId": "MISSING",
@@ -1293,49 +1293,6 @@
   ],
   "easy": [
     {
-      "date": "2026-07-22",
-      "source": "automated",
-      "tags": {
-        "window.cnstrc.userId": "MISSING",
-        "purchaseData (estructura completa)": "N/V",
-        "data-cnstrc-search-form": "MISSING",
-        "data-cnstrc-search-input": "MISSING",
-        "data-cnstrc-search-submit-btn": "MISSING",
-        "data-cnstrc-autosuggest": "N/V",
-        "data-cnstrc-item-section": "N/V",
-        "data-cnstrc-item-id (autocomplete)": "N/V",
-        "data-cnstrc-search": "MISSING",
-        "data-cnstrc-num-results": "MISSING",
-        "data-cnstrc-item-id (PLP)": "MISSING",
-        "data-cnstrc-item-variation-id (PLP)": "N/A",
-        "data-cnstrc-item-price (PLP)": "N/A",
-        "data-cnstrc-btn (PLP)": "N/A",
-        "data-cnstrc-browse": "MISSING",
-        "data-cnstrc-filter-name": "MISSING",
-        "data-cnstrc-filter-value": "MISSING",
-        "data-cnstrc-product-detail": "MISSING",
-        "data-cnstrc-item-id (PDP)": "MISSING",
-        "data-cnstrc-item-variation-id (PDP)": "N/A",
-        "data-cnstrc-item-price (PDP)": "MISSING",
-        "data-cnstrc-btn=\"add_to_cart\" (PDP)": "MISSING",
-        "data-cnstrc-item-id (carrusel)": "N/A",
-        "data-cnstrc-item-variation-id (carrusel)": "N/A",
-        "data-cnstrc-item-price (carrusel)": "N/A",
-        "data-cnstrc-btn (carrusel)": "N/A",
-        "data-cnstrc-recommendations": "N/A",
-        "data-cnstrc-recommendations-pod-id": "N/A",
-        "data-cnstrc-result-id": "N/A",
-        "data-cnstrc-num-results (recs)": "N/A",
-        "data-cnstrc-item-id (recs)": "N/A",
-        "data-cnstrc-item-variation-id (recs)": "N/A"
-      },
-      "collections": {
-        "measured": [],
-        "summaryPct": null,
-        "discovered": 0
-      }
-    },
-    {
       "date": "2026-07-23",
       "source": "automated",
       "tags": {
@@ -2581,23 +2538,21 @@
         "summaryPct": null,
         "discovered": 0
       }
-    }
-  ],
-  "jumbo": [
+    },
     {
-      "date": "2026-07-22",
+      "date": "2026-08-21",
       "source": "automated",
       "tags": {
         "window.cnstrc.userId": "MISSING",
         "purchaseData (estructura completa)": "N/V",
-        "data-cnstrc-search-form": "OK",
-        "data-cnstrc-search-input": "OK",
-        "data-cnstrc-search-submit-btn": "OK",
-        "data-cnstrc-autosuggest": "OK",
+        "data-cnstrc-search-form": "MISSING",
+        "data-cnstrc-search-input": "MISSING",
+        "data-cnstrc-search-submit-btn": "MISSING",
+        "data-cnstrc-autosuggest": "N/V",
         "data-cnstrc-item-section": "N/V",
         "data-cnstrc-item-id (autocomplete)": "N/V",
-        "data-cnstrc-search": "OK",
-        "data-cnstrc-num-results": "OK",
+        "data-cnstrc-search": "MISSING",
+        "data-cnstrc-num-results": "MISSING",
         "data-cnstrc-item-id (PLP)": "MISSING",
         "data-cnstrc-item-variation-id (PLP)": "N/A",
         "data-cnstrc-item-price (PLP)": "N/A",
@@ -2605,11 +2560,11 @@
         "data-cnstrc-browse": "MISSING",
         "data-cnstrc-filter-name": "MISSING",
         "data-cnstrc-filter-value": "MISSING",
-        "data-cnstrc-product-detail": "OK",
-        "data-cnstrc-item-id (PDP)": "OK",
+        "data-cnstrc-product-detail": "MISSING",
+        "data-cnstrc-item-id (PDP)": "MISSING",
         "data-cnstrc-item-variation-id (PDP)": "N/A",
-        "data-cnstrc-item-price (PDP)": "OK",
-        "data-cnstrc-btn=\"add_to_cart\" (PDP)": "OK",
+        "data-cnstrc-item-price (PDP)": "MISSING",
+        "data-cnstrc-btn=\"add_to_cart\" (PDP)": "MISSING",
         "data-cnstrc-item-id (carrusel)": "N/A",
         "data-cnstrc-item-variation-id (carrusel)": "N/A",
         "data-cnstrc-item-price (carrusel)": "N/A",
@@ -2622,78 +2577,13 @@
         "data-cnstrc-item-variation-id (recs)": "N/A"
       },
       "collections": {
-        "measured": [
-          {
-            "url": "https://www.jumbo.cl/busca?fq=H%3A30661&nombre_promo=home-carrusel-proveedor-superweek-proveedor-mondelez-oreo-s30-21072026",
-            "tags": {
-              "data-cnstrc-browse": "MISSING",
-              "data-cnstrc-filter-name": "MISSING",
-              "data-cnstrc-filter-value": "MISSING",
-              "data-cnstrc-num-results": "OK",
-              "data-cnstrc-item-id": "MISSING"
-            },
-            "pct": 20
-          },
-          {
-            "url": "https://www.jumbo.cl/busca?fq=H%3A30662&nombre_promo=home-carrusel-proveedor-superweek-proveedor-mondelez-club-social-s30-21072026",
-            "tags": {
-              "data-cnstrc-browse": "MISSING",
-              "data-cnstrc-filter-name": "MISSING",
-              "data-cnstrc-filter-value": "MISSING",
-              "data-cnstrc-num-results": "OK",
-              "data-cnstrc-item-id": "MISSING"
-            },
-            "pct": 20
-          },
-          {
-            "url": "https://www.jumbo.cl/busca?fq=H%3A30664&nombre_promo=home-carrusel-proveedor-superweek-proveedor-mondelez-milka-s30-21072026",
-            "tags": {
-              "data-cnstrc-browse": "MISSING",
-              "data-cnstrc-filter-name": "MISSING",
-              "data-cnstrc-filter-value": "MISSING",
-              "data-cnstrc-num-results": "OK",
-              "data-cnstrc-item-id": "MISSING"
-            },
-            "pct": 20
-          },
-          {
-            "url": "https://www.jumbo.cl/busca?fq=H%3A30660&nombre_promo=home-carrusel-proveedor-superweek-proveedor-mondelez-ritz-s30-21072026",
-            "tags": {
-              "data-cnstrc-browse": "MISSING",
-              "data-cnstrc-filter-name": "MISSING",
-              "data-cnstrc-filter-value": "MISSING",
-              "data-cnstrc-num-results": "OK",
-              "data-cnstrc-item-id": "MISSING"
-            },
-            "pct": 20
-          },
-          {
-            "url": "https://www.jumbo.cl/busca?fq=H%3A30663&nombre_promo=home-carrusel-proveedor-superweek-proveedor-mondelez-todos-sku-s30-21072026",
-            "tags": {
-              "data-cnstrc-browse": "MISSING",
-              "data-cnstrc-filter-name": "MISSING",
-              "data-cnstrc-filter-value": "MISSING",
-              "data-cnstrc-num-results": "OK",
-              "data-cnstrc-item-id": "MISSING"
-            },
-            "pct": 20
-          },
-          {
-            "url": "https://www.jumbo.cl/busca?fq=H%3A9255",
-            "tags": {
-              "data-cnstrc-browse": "MISSING",
-              "data-cnstrc-filter-name": "MISSING",
-              "data-cnstrc-filter-value": "MISSING",
-              "data-cnstrc-num-results": "OK",
-              "data-cnstrc-item-id": "MISSING"
-            },
-            "pct": 20
-          }
-        ],
-        "summaryPct": 0,
-        "discovered": 6
+        "measured": [],
+        "summaryPct": null,
+        "discovered": 0
       }
-    },
+    }
+  ],
+  "jumbo": [
     {
       "date": "2026-07-23",
       "source": "automated",
@@ -5663,11 +5553,9 @@
         "summaryPct": 100,
         "discovered": 6
       }
-    }
-  ],
-  "santaisabel": [
+    },
     {
-      "date": "2026-07-22",
+      "date": "2026-08-21",
       "source": "automated",
       "tags": {
         "window.cnstrc.userId": "MISSING",
@@ -5675,27 +5563,27 @@
         "data-cnstrc-search-form": "OK",
         "data-cnstrc-search-input": "OK",
         "data-cnstrc-search-submit-btn": "OK",
-        "data-cnstrc-autosuggest": "OK",
+        "data-cnstrc-autosuggest": "N/V",
         "data-cnstrc-item-section": "N/V",
-        "data-cnstrc-item-id (autocomplete)": "N/V",
-        "data-cnstrc-search": "OK",
+        "data-cnstrc-item-id (autocomplete)": "OK",
+        "data-cnstrc-search": "MISSING",
         "data-cnstrc-num-results": "OK",
-        "data-cnstrc-item-id (PLP)": "MISSING",
+        "data-cnstrc-item-id (PLP)": "OK",
         "data-cnstrc-item-variation-id (PLP)": "N/A",
-        "data-cnstrc-item-price (PLP)": "N/A",
-        "data-cnstrc-btn (PLP)": "N/A",
-        "data-cnstrc-browse": "MISSING",
-        "data-cnstrc-filter-name": "MISSING",
-        "data-cnstrc-filter-value": "MISSING",
-        "data-cnstrc-product-detail": "MISSING",
-        "data-cnstrc-item-id (PDP)": "MISSING",
+        "data-cnstrc-item-price (PLP)": "OK",
+        "data-cnstrc-btn (PLP)": "OK",
+        "data-cnstrc-browse": "OK",
+        "data-cnstrc-filter-name": "OK",
+        "data-cnstrc-filter-value": "OK",
+        "data-cnstrc-product-detail": "OK",
+        "data-cnstrc-item-id (PDP)": "OK",
         "data-cnstrc-item-variation-id (PDP)": "N/A",
-        "data-cnstrc-item-price (PDP)": "MISSING",
-        "data-cnstrc-btn=\"add_to_cart\" (PDP)": "MISSING",
-        "data-cnstrc-item-id (carrusel)": "N/A",
+        "data-cnstrc-item-price (PDP)": "OK",
+        "data-cnstrc-btn=\"add_to_cart\" (PDP)": "OK",
+        "data-cnstrc-item-id (carrusel)": "OK",
         "data-cnstrc-item-variation-id (carrusel)": "N/A",
-        "data-cnstrc-item-price (carrusel)": "N/A",
-        "data-cnstrc-btn (carrusel)": "N/A",
+        "data-cnstrc-item-price (carrusel)": "OK",
+        "data-cnstrc-btn (carrusel)": "OK",
         "data-cnstrc-recommendations": "N/A",
         "data-cnstrc-recommendations-pod-id": "N/A",
         "data-cnstrc-result-id": "N/A",
@@ -5704,11 +5592,80 @@
         "data-cnstrc-item-variation-id (recs)": "N/A"
       },
       "collections": {
-        "measured": [],
-        "summaryPct": null,
-        "discovered": 0
+        "measured": [
+          {
+            "url": "https://www.jumbo.cl/busca?fq=H%3A30883",
+            "tags": {
+              "data-cnstrc-browse": "OK",
+              "data-cnstrc-filter-name": "OK",
+              "data-cnstrc-filter-value": "OK",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 100
+          },
+          {
+            "url": "https://www.jumbo.cl/busca?fq=H%3A31190&nombre_promo=home-banner-bombazo-ciclos-camarones-ecuatorianos-o-apanados-cuisine-s34-18082026",
+            "tags": {
+              "data-cnstrc-browse": "OK",
+              "data-cnstrc-filter-name": "OK",
+              "data-cnstrc-filter-value": "OK",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 100
+          },
+          {
+            "url": "https://www.jumbo.cl/busca?fq=H%3A31185&nombre_promo=home-banner-bombazo-ciclos-todo-soprole-proteina-20-dcto-s34-18082026",
+            "tags": {
+              "data-cnstrc-browse": "OK",
+              "data-cnstrc-filter-name": "OK",
+              "data-cnstrc-filter-value": "OK",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 100
+          },
+          {
+            "url": "https://www.jumbo.cl/busca?fq=H%3A30485&nombre_promo=home-banner-bombazo-excl-costillares-super-cerdo-variedades-kg-s34-18082026",
+            "tags": {
+              "data-cnstrc-browse": "OK",
+              "data-cnstrc-filter-name": "OK",
+              "data-cnstrc-filter-value": "OK",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 100
+          },
+          {
+            "url": "https://www.jumbo.cl/busca?fq=H%3A31211&nombre_promo=home-banner-especial-banner-ppal-proveedor-unilever-pack-omo-s34-18082026",
+            "tags": {
+              "data-cnstrc-browse": "OK",
+              "data-cnstrc-filter-name": "OK",
+              "data-cnstrc-filter-value": "OK",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 100
+          },
+          {
+            "url": "https://www.jumbo.cl/busca?fq=H%3A31209&nombre_promo=home-huincha-bombazo-excl-soprole-mantequilla-c-sal-250-s34-20082026",
+            "tags": {
+              "data-cnstrc-browse": "OK",
+              "data-cnstrc-filter-name": "OK",
+              "data-cnstrc-filter-value": "OK",
+              "data-cnstrc-num-results": "OK",
+              "data-cnstrc-item-id": "OK"
+            },
+            "pct": 100
+          }
+        ],
+        "summaryPct": 100,
+        "discovered": 6
       }
-    },
+    }
+  ],
+  "santaisabel": [
     {
       "date": "2026-07-23",
       "source": "automated",
@@ -6915,6 +6872,49 @@
     },
     {
       "date": "2026-08-20",
+      "source": "automated",
+      "tags": {
+        "window.cnstrc.userId": "MISSING",
+        "purchaseData (estructura completa)": "N/V",
+        "data-cnstrc-search-form": "OK",
+        "data-cnstrc-search-input": "OK",
+        "data-cnstrc-search-submit-btn": "OK",
+        "data-cnstrc-autosuggest": "OK",
+        "data-cnstrc-item-section": "N/V",
+        "data-cnstrc-item-id (autocomplete)": "N/V",
+        "data-cnstrc-search": "OK",
+        "data-cnstrc-num-results": "OK",
+        "data-cnstrc-item-id (PLP)": "MISSING",
+        "data-cnstrc-item-variation-id (PLP)": "N/A",
+        "data-cnstrc-item-price (PLP)": "N/A",
+        "data-cnstrc-btn (PLP)": "N/A",
+        "data-cnstrc-browse": "MISSING",
+        "data-cnstrc-filter-name": "MISSING",
+        "data-cnstrc-filter-value": "MISSING",
+        "data-cnstrc-product-detail": "MISSING",
+        "data-cnstrc-item-id (PDP)": "MISSING",
+        "data-cnstrc-item-variation-id (PDP)": "N/A",
+        "data-cnstrc-item-price (PDP)": "MISSING",
+        "data-cnstrc-btn=\"add_to_cart\" (PDP)": "MISSING",
+        "data-cnstrc-item-id (carrusel)": "N/A",
+        "data-cnstrc-item-variation-id (carrusel)": "N/A",
+        "data-cnstrc-item-price (carrusel)": "N/A",
+        "data-cnstrc-btn (carrusel)": "N/A",
+        "data-cnstrc-recommendations": "N/A",
+        "data-cnstrc-recommendations-pod-id": "N/A",
+        "data-cnstrc-result-id": "N/A",
+        "data-cnstrc-num-results (recs)": "N/A",
+        "data-cnstrc-item-id (recs)": "N/A",
+        "data-cnstrc-item-variation-id (recs)": "N/A"
+      },
+      "collections": {
+        "measured": [],
+        "summaryPct": null,
+        "discovered": 0
+      }
+    },
+    {
+      "date": "2026-08-21",
       "source": "automated",
       "tags": {
         "window.cnstrc.userId": "MISSING",
